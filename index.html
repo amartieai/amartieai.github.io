@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMARTIE Witness — Was your fill too clean?</title>
+<meta name="description" content="Two free, open-source tools to check whether your broker's feed lies at the exact second you trade. A ruler, not a strategy.">
+<meta property="og:title" content="AMARTIE Witness — Was your fill too clean?">
+<meta property="og:description" content="Two free tools: reconcile your screen recording against the public record at your exact fill minutes. Ruler, not strategy.">
+<meta property="og:type" content="website">
+<style>
+  :root { --bg:#0b0f14; --panel:#131a22; --ink:#e8eef4; --dim:#8a99a8; --accent:#2dd4a7; --accent2:#38bdf8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:760px; margin:0 auto; padding:48px 20px 80px; }
+  .kicker { color:var(--accent); font-weight:700; letter-spacing:.14em; text-transform:uppercase; font-size:.8rem; }
+  h1 { font-size:2.3rem; line-height:1.15; margin:.4rem 0 .8rem; }
+  .lede { color:var(--dim); font-size:1.15rem; max-width:34rem; }
+  .grid { display:grid; gap:16px; margin:32px 0; }
+  @media(min-width:620px){ .grid { grid-template-columns:1fr 1fr; } }
+  .card { background:var(--panel); border:1px solid #20303c; border-radius:12px; padding:22px; }
+  .card h2 { margin:0 0 .3rem; font-size:1.2rem; }
+  .card .tag { color:var(--accent2); font-size:.8rem; letter-spacing:.05em; text-transform:uppercase; }
+  .card p { color:var(--dim); font-size:.95rem; margin:.6rem 0 1rem; }
+  .repo { display:inline-block; color:var(--accent); text-decoration:none; font-weight:600; font-size:.95rem; border-bottom:1px solid rgba(45,212,167,.4); }
+  .repo:hover { border-color:var(--accent); }
+  .sharebox { background:var(--panel); border:1px solid #20303c; border-radius:12px; padding:24px; margin-top:8px; }
+  .sharebox h3 { margin:0 0 .3rem; }
+  .sharebox .sub { color:var(--dim); font-size:.95rem; margin-bottom:16px; }
+  .row { display:flex; flex-wrap:wrap; gap:10px; }
+  .btn { cursor:pointer; border:none; border-radius:8px; padding:11px 16px; font-size:.92rem; font-weight:600; color:#04121a; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:transform .08s ease, filter .12s ease; }
+  .btn:hover { transform:translateY(-1px); filter:brightness(1.08); }
+  .btn:active { transform:translateY(0); }
+  .copy { background:var(--accent); color:#04121a; }
+  .x { background:#e7e9ea; color:#000; }
+  .fb { background:#1877f2; color:#fff; }
+  .rd { background:#ff4500; color:#fff; }
+  .wa { background:#25d366; color:#04121a; }
+  .tg { background:#229ed9; color:#fff; }
+  .li { background:#0a66c2; color:#fff; }
+  .em { background:#444; color:#fff; }
+  .foot { margin-top:40px; color:#56626e; font-size:.85rem; }
+  .foot a { color:#7c93a5; }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--accent); color:#04121a; font-weight:600; padding:10px 18px; border-radius:8px; opacity:0; pointer-events:none; transition:opacity .2s; }
+  .toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">AMARTIE · open tools</div>
+  <h1>Was your fill too clean?</h1>
+  <p class="lede">You know the feeling — the bar that was there a second ago isn't on the export your broker sends you. It happens at the exact minute you clicked trade. These two free tools let you prove it yourself. A ruler, not a strategy.</p>
+
+  <div class="grid">
+    <div class="card">
+      <div class="tag">Tape Witness</div>
+      <h2>Reconcile the exact click minutes</h2>
+      <p>Record your own screen, then match it against the public record at the minutes you acted. Catches vanishing bars and click-time divergence.</p>
+      <a class="repo" href="https://github.com/amartieai/tape-witness" target="_blank" rel="noopener">github.com/amartieai/tape-witness →</a>
+    </div>
+    <div class="card">
+      <div class="tag">Trade Witness</div>
+      <h2>An always-on session log</h2>
+      <p>Keeps a running witness of your trading sessions against the tape, so the evidence exists before you ever need it.</p>
+      <a class="repo" href="https://github.com/amartieai/trade-witness" target="_blank" rel="noopener">github.com/amartieai/trade-witness →</a>
+    </div>
+  </div>
+
+  <div class="sharebox">
+    <h3>Know a trader who needs this?</h3>
+    <p class="sub">One click shares it — it spreads on its own.</p>
+    <div class="row">
+      <a class="btn copy" id="copyBtn" href="#">📋 Copy link</a>
+      <a class="btn x" id="shareX" target="_blank" rel="noopener">Share on X</a>
+      <a class="btn fb" id="shareFb" target="_blank" rel="noopener">Facebook</a>
+      <a class="btn rd" id="shareRd" target="_blank" rel="noopener">Reddit</a>
+      <a class="btn wa" id="shareWa" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="btn tg" id="shareTg" target="_blank" rel="noopener">Telegram</a>
+      <a class="btn li" id="shareLi" target="_blank" rel="noopener">LinkedIn</a>
+      <a class="btn em" id="shareEm" target="_blank" rel="noopener">Email</a>
+    </div>
+  </div>
+
+  <div class="foot">
+    Built open, built free. Nothing in your name, nothing to install behind your broker.
+    <a href="https://github.com/amartieai" target="_blank" rel="noopener">github.com/amartieai</a>
+  </div>
+</div>
+<div class="toast" id="toast">Link copied</div>
+
+<script>
+  const TITLE = "Was your fill too clean? Two free tools to check the tape (ruler, not strategy)";
+  const url = location.href;
+  const u = encodeURIComponent(url);
+  const t = encodeURIComponent(TITLE);
+  document.getElementById('shareX').href = "https://twitter.com/intent/tweet?text=" + t + "&url=" + u;
+  document.getElementById('shareFb').href = "https://www.facebook.com/sharer/sharer.php?u=" + u;
+  document.getElementById('shareRd').href = "https://www.reddit.com/submit?url=" + u + "&title=" + t;
+  document.getElementById('shareWa').href = "https://wa.me/?text=" + t + "%20" + u;
+  document.getElementById('shareTg').href = "https://t.me/share/url?url=" + u + "&text=" + t;
+  document.getElementById('shareLi').href = "https://www.linkedin.com/sharing/share-offsite/?url=" + u;
+  document.getElementById('shareEm').href = "mailto:?subject=" + t + "&body=" + t + "%0A%0A" + url;
+  document.getElementById('copyBtn').addEventListener('click', function(e){
+    e.preventDefault();
+    const done = () => { const x = document.getElementById('toast'); x.classList.add('show'); setTimeout(()=>x.classList.remove('show'),1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(done).catch(done); }
+    else { const ta=document.createElement('textarea'); ta.value=url; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(_){} document.body.removeChild(ta); done(); }
+  });
+</script>
+</body>
+</html>
