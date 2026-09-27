@@ -291,6 +291,24 @@
     }
     .lede { color: #b8f0d0; font-weight: 600; font-style: italic; margin-top: 12px; max-width: 58ch; text-shadow: 0 0 8px rgba(184,240,208,0.2); }
 
+    /* ---- SHARE SECTION ---- */
+    #share { padding: 60px 0; }
+    .share-card {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: 16px; padding: 28px; max-width: 520px; margin-top: 24px;
+    }
+    .share-link-box { display: flex; gap: 10px; margin-bottom: 16px; }
+    .share-link-box input {
+      flex: 1; background: var(--bg); border: 1px solid var(--line);
+      border-radius: 999px; padding: 12px 18px; color: var(--gold);
+      font-family: "IBM Plex Mono", monospace; font-size: 14px;
+    }
+    .share-link-box input:focus { outline: none; border-color: var(--green); }
+    .share-stats { font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+    .share-stats .stat { color: var(--gold); font-weight: 700; font-size: 18px; }
+    .share-progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+    .share-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--green), var(--gold)); border-radius: 2px; transition: width 0.5s; }
+
     .viewer {
       margin-top: 28px;
       display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 18px;
@@ -721,6 +739,27 @@
       </div>
     </div>
   </header>
+
+  <section id="share">
+    <div class="wrap">
+      <div class="section-label">Share & Earn</div>
+      <h2>Share the WHEN.</h2>
+      <p class="lede">Share your link. Every click is a verified share. Each verified share earns you a free pick next week. Free picks every weekend. Keep going.</p>
+      <div class="share-card">
+        <div class="share-link-box">
+          <input type="text" id="shareLink" readonly placeholder="Loading your share link...">
+          <button class="btn btn-primary" id="copyBtn">Copy Link</button>
+        </div>
+        <div class="share-stats">
+          <span class="stat" id="shareClicks">0</span> clicks &nbsp;·&nbsp;
+          <span class="stat" id="freePicks">0</span> free picks earned
+        </div>
+        <div class="share-progress">
+          <div class="share-bar"></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section id="viewer">
     <div class="wrap">
@@ -1780,5 +1819,31 @@
       }, 8000);
     }
   </script>
+    /* ---------- canary share ---------- */
+    async function loadShareLink() {
+      try {
+        // Get user email from localStorage or show generic link
+        const email = localStorage.getItem('oracle_email') || '';
+        const res = await fetch('/api/share-link', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({email})
+        });
+        const data = await res.json();
+        if (data.link) {
+          document.getElementById('shareLink').value = data.link;
+          document.getElementById('freePicks').textContent = data.total_free_picks || 0;
+        }
+      } catch(e) {}
+    }
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const link = document.getElementById('shareLink').value;
+      navigator.clipboard.writeText(link).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy Link', 2000);
+      });
+    });
+    loadShareLink();
 </body>
 </html>

@@ -12,7 +12,7 @@ public proof. We don't know what exactly. But we sure know fucking when.
 
 Static files: /static/video/bg.mp4 (looping background), /static/img/* (watermark stills)
 """
-import json, os, urllib.request, urllib.error
+import json, os, sys, urllib.request, urllib.error
 from urllib.parse import urlparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -91,6 +91,28 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/account":
             code, out = _req("account", "/account?" + u.query)
             self._send(code, out); return
+        if u.path == "/api/verify-share":
+            try:
+                sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                from canary_token import verify_click
+                body = self._read_json()
+                result = verify_click(body.get("token", ""), body.get("verifier", ""))
+                self._send(200, json.dumps(result))
+            except Exception as e:
+                self._send(500, json.dumps({"error": str(e)}))
+            return
+        if u.path == "/api/share-link":
+            try:
+                sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                from canary_token import get_share_link, get_sharing_stats
+                body = self._read_json()
+                email = body.get("email", "")
+                link = get_share_link(email)
+                stats = get_sharing_stats(email)
+                self._send(200, json.dumps({"link": link, **stats}))
+            except Exception as e:
+                self._send(500, json.dumps({"error": str(e)}))
+            return
         self._send(404, json.dumps({"error": "not found"}))
 
     def do_POST(self):
@@ -103,6 +125,28 @@ class H(BaseHTTPRequestHandler):
         if u.path == "/api/event":
             code, out = _req("event", "/event", "POST", body)
             self._send(code, out); return
+        if u.path == "/api/verify-share":
+            try:
+                sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                from canary_token import verify_click
+                body = self._read_json()
+                result = verify_click(body.get("token", ""), body.get("verifier", ""))
+                self._send(200, json.dumps(result))
+            except Exception as e:
+                self._send(500, json.dumps({"error": str(e)}))
+            return
+        if u.path == "/api/share-link":
+            try:
+                sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                from canary_token import get_share_link, get_sharing_stats
+                body = self._read_json()
+                email = body.get("email", "")
+                link = get_share_link(email)
+                stats = get_sharing_stats(email)
+                self._send(200, json.dumps({"link": link, **stats}))
+            except Exception as e:
+                self._send(500, json.dumps({"error": str(e)}))
+            return
         self._send(404, json.dumps({"error": "not found"}))
 
     def _serve_static(self, path):
@@ -125,6 +169,10 @@ class H(BaseHTTPRequestHandler):
         except OSError:
             self._send(500, b"server error")
 
+
+    def _read_json(self):
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        return json.loads(self.rfile.read(length) or "{}")
 
 if __name__ == "__main__":
     ThreadingHTTPServer((HOST, PORT), H).serve_forever()
