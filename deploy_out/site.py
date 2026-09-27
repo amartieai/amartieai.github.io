@@ -10,7 +10,7 @@ The site sells the WINDOW. It carries NO engine internals, no direction,
 no price targets, no track-record claims. The live turn-clock is the
 public proof. We don't know what exactly. But we sure know fucking when.
 
-Static files: /static/video/bg.mp4 (looping background), /static/img/* (watermark stills)
+Static files: /static/video/oracle_cover.mp4 (looping background), /static/img/* (watermark stills)
 """
 import json, os, sys, urllib.request, urllib.error
 from urllib.parse import urlparse
