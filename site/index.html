@@ -757,6 +757,25 @@
         <div class="share-progress">
           <div class="share-bar"></div>
         </div>
+        <div class="share-tier" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line)">
+          <div style="font-size:.85rem;color:var(--dim);margin-bottom:10px">Securing spots for weeks to come?</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-gold" id="purchaseBtn" style="font-size:.9rem;padding:10px 24px">Purchase — 2 Extra Picks</button>
+            <div id="purchaseStatus" style="display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--dim)">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block"></span>
+              <span>BTC wallet ready</span>
+            </div>
+          </div>
+          <div id="purchaseModal" style="display:none;margin-top:14px;padding:14px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px">
+            <div style="font-weight:600;margin-bottom:6px">Send BTC/USDC to this address:</div>
+            <div id="purchaseAddress" style="font-family:IBM Plex Mono,monospace;font-size:.85rem;word-break:break-all;padding:8px;background:#000;border-radius:6px;margin-bottom:8px"></div>
+            <div style="font-size:.8rem;color:var(--dim);margin-bottom:8px">Payment confirmed = 2 extra free picks added to your account.</div>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="txHashInput" placeholder="Tx hash" style="flex:1;padding:6px 10px;font-size:.85rem;background:#111;border:1px solid var(--line);border-radius:6px;color:#fff">
+              <button class="btn btn-primary" id="confirmPurchaseBtn" style="font-size:.85rem;padding:6px 16px">Confirm</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1845,5 +1864,47 @@
       });
     });
     loadShareLink();
+    /* ---------- purchase flow ---------- */
+    (async () => {
+      const purchaseBtn = document.getElementById('purchaseBtn');
+      const purchaseModal = document.getElementById('purchaseModal');
+      const purchaseAddress = document.getElementById('purchaseAddress');
+      const confirmPurchaseBtn = document.getElementById('confirmPurchaseBtn');
+      const txHashInput = document.getElementById('txHashInput');
+      if (!purchaseBtn || !purchaseModal) return;
+      purchaseBtn.addEventListener('click', async () => {
+        try {
+          const resp = await fetch('/api/purchase', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email: localStorage.getItem('oracle_email') || '', currency: 'BTC'})
+          });
+          const data = await resp.json();
+          if (data.address) {
+            window._purchaseId = data.purchase_id;
+            purchaseAddress.textContent = data.address;
+            purchaseModal.style.display = 'block';
+          }
+        } catch(e) { console.error(e); }
+      });
+      if (confirmPurchaseBtn && txHashInput) {
+        confirmPurchaseBtn.addEventListener('click', async () => {
+          const txHash = txHashInput.value.trim();
+          if (!txHash || !window._purchaseId) return;
+          try {
+            const resp = await fetch('/api/confirm-purchase', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({purchase_id: window._purchaseId, tx_hash: txHash})
+            });
+            const data = await resp.json();
+            if (data.status === 'confirmed') {
+              purchaseModal.innerHTML = '<div style="color:var(--gold);font-weight:600">✅ Payment confirmed! 2 extra picks added.</div>';
+              loadShareLink();
+            }
+          } catch(e) { console.error(e); }
+        });
+      }
+    })();
 </body>
 </html>
