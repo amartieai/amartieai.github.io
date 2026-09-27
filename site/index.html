@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ORACLE SYSTEM — We sell timing. Not direction. Not price. The WHEN.</title>
+  <meta name="description" content="ORACLE SYSTEM tells you the exact time window a market move is scheduled to happen. Three free events. No card. Pay from profits. No more FOMO." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07080b;
+      --bg-2: #0c0e13;
+      --surface: #12151c;
+      --surface-2: #181c25;
+      --line: rgba(232, 230, 223, 0.08);
+      --line-strong: rgba(232, 230, 223, 0.16);
+      --text: #eceae3;
+      --muted: #8b909b;
+      --dim: #5c616b;
+      --green: #b44aff;
+      --green-deep: #1a0a2e;
+      --red: #ff4d5a;
+      --gold: #e8b86d;
+      --gold-soft: #f0c674;
+      --glow: 0 0 24px rgba(46, 229, 138, 0.35);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(180,74,255,0.07), transparent 50%),
+        radial-gradient(ellipse 40% 30% at 90% 10%, rgba(232,184,109,0.05), transparent 50%),
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: auto, auto, 48px 48px, 48px 48px;
+    }
+    img, svg { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    button, input { font-family: inherit; }
+    .wrap { width: min(1120px, calc(100% - 40px)); margin: 0 auto; position: relative; z-index: 1; }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(16px);
+      background: rgba(7,8,11,0.72);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; gap: 16px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; letter-spacing: 0.14em; font-size: 13px;
+    }
+    .logo-mark {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1.5px solid var(--green);
+      box-shadow: var(--glow);
+      position: relative;
+    }
+    .logo-mark::after {
+      content: "";
+      position: absolute; left: 50%; top: 7px;
+      width: 1.5px; height: 8px; background: var(--green);
+      transform-origin: bottom center;
+      animation: hand 8s linear infinite;
+    }
+    @keyframes hand { to { transform: rotate(360deg); } }
+    .nav-links { display: flex; gap: 22px; font-size: 13px; color: var(--muted); }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--green); color: #04140c;
+      font-weight: 700; font-size: 13px;
+      padding: 9px 14px; border-radius: 999px; border: 0; cursor: pointer;
+    }
+    .nav-cta:hover { filter: brightness(1.08); }
+
+    /* LIVE STRIP */
+    .live-strip {
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      padding: 8px 16px;
+      background: #0a0c10;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px; color: var(--muted);
+    }
+    .pulse {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+      box-shadow: 0 0 0 0 rgba(180,74,255,0.6);
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+      70% { box-shadow: 0 0 0 8px rgba(180,74,255,0); }
+      100% { box-shadow: 0 0 0 0 rgba(180,74,255,0); }
+    }
+
+    /* HERO */
+    .hero { padding: 56px 0 28px; }
+    .kicker {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+      font-style: italic; color: #b44aff; text-shadow: 0 0 12px rgba(43,184,106,0.4);
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: clamp(52px, 10vw, 96px); font-weight: 700; font-style: italic;
+      line-height: 0.92; letter-spacing: -0.02em;
+      max-width: 16ch; color: #fff;
+      text-shadow: 0 0 12px rgba(43,184,106,0.4), 0 0 100px rgba(232,184,109,0.15);
+    }
+    h1 em { font-style: italic; color: var(--gold-soft); }
+    .subhead {
+      margin-top: 18px; max-width: 46ch;
+      color: #b8f0d0; font-size: 18px; font-style: italic;
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border: 0; cursor: pointer; border-radius: 999px;
+      padding: 13px 20px; font-weight: 700; font-size: 14px;
+    }
+    .btn-primary { background: var(--green); color: #04140c; box-shadow: var(--glow); }
+    .btn-ghost {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--line-strong);
+    }
+    .btn:hover { transform: translateY(-1px); }
+
+    /* STAGE — animated 15s hero */
+    .stage {
+      margin-top: 40px;
+      background: linear-gradient(180deg, #10131a 0%, #0b0d12 100%);
+      border: 1px solid var(--line-strong);
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      min-height: 420px;
+    }
+    .stage-chrome {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-bottom: 1px solid var(--line);
+      font-size: 12px; color: var(--dim);
+    }
+    .dots { display: flex; gap: 6px; }
+    .dots span { width: 8px; height: 8px; border-radius: 50%; background: #2a2f3a; }
+    .dots span:nth-child(1) { background: #ff5f57; }
+    .dots span:nth-child(2) { background: #febc2e; }
+    .dots span:nth-child(3) { background: #28c840; }
+    .stage-body { position: relative; height: 460px; padding: 16px 18px 20px;  background: rgba(7,8,11,0.4);
+    }
+
+    /* ---- VIVID CANDLE SCROLL ---- */
+    #candles {
+      position: absolute; left: -100%; top: auto; bottom: 20px;
+      width: 300%; height: 140px;
+      opacity: 0.35; z-index: 4;
+      animation: candle-scroll 20s linear infinite;
+      background: transparent;
+    }
+    @keyframes candle-scroll {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+    .phase-caption {
+      position: absolute; left: 18px; top: 16px; z-index: 4;
+      font-size: 13px; color: var(--muted);
+      background: rgba(7,8,11,0.55); padding: 6px 10px; border-radius: 8px;
+      backdrop-filter: blur(8px);
+      transition: opacity .4s;
+    }
+    #candles {
+      position: absolute; left: 18px; right: 18px; bottom: 18px;
+      width: calc(100% - 36px); height: 220px; display: block;
+      opacity: 0.4; z-index: 3;
+      background: rgba(7,8,11,0.2); border-radius: 10px;
+    }
+    .stage-film {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: contain; object-position: center;
+      display: none; opacity: 0.72;
+    }
+    .stage-film.on { display: block; }
+    .dual {
+      display: none; gap: 12px; height: calc(100% - 8px); margin-top: 0;
+    }
+    .dual video {
+      width: 100%; height: 100%; object-fit: contain; display: block;
+      opacity: 0.72;
+}
+    .dual.on { display: grid; grid-template-columns: 1fr 1fr; }
+    .mini-chart {
+      background: #0a0c11; border: 1px solid var(--line); border-radius: 10px;
+      position: relative; overflow: hidden;
+    }
+    .mini-chart label {
+      position: absolute; top: 8px; left: 10px; font-size: 11px; color: var(--dim);
+    }
+    .alert-banner {
+      position: absolute; left: 50%; bottom: 80px;
+      transform: translate(-50%, 0) translateY(16px);
+      opacity: 0;
+      width: min(520px, calc(100% - 32px));
+      background: #0b0e14;
+      border: 1px solid rgba(180,74,255,0.45);
+      border-radius: 12px;
+      padding: 16px 18px 14px;
+      box-shadow: 0 0 0 1px rgba(180,74,255,0.12), 0 20px 60px rgba(0,0,0,0.55), var(--glow);
+      z-index: 5;
+      pointer-events: none;
+    }
+    .alert-banner.show {
+      opacity: 1; transform: translate(-50%, -50%) translateY(0);
+      transition: opacity .45s ease, transform .45s ease;
+    }
+    .alert-banner .tag {
+      font-size: 11px; letter-spacing: 0.2em; color: var(--green);
+      margin-bottom: 6px;
+    }
+    .alert-banner h3 {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: clamp(18px, 3vw, 26px); font-weight: 600; letter-spacing: 0.04em;
+    }
+    .alert-line {
+      height: 2px; margin-top: 12px;
+      background: linear-gradient(90deg, transparent, var(--green), transparent);
+      box-shadow: 0 0 12px var(--green);
+      animation: sweep 1.8s ease-in-out infinite;
+    }
+    @keyframes sweep {
+      0%,100% { opacity: .45; }
+      50% { opacity: 1; }
+    }
+    .resolve {
+      position: fixed; top: 18%; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at center, rgba(232,184,109,0.2), rgba(7,8,11,0.92) 80%);
+      width: min(600px, 90vw); padding: 48px 36px;
+      border-radius: 20px;
+      opacity: 0; pointer-events: none; z-index: 50;
+      margin-top: -40px;
+    }
+    .resolve.show { opacity: 1; transition: opacity .5s ease; }
+    .resolve .smile {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(48px, 8vw, 72px); color: var(--gold);
+      font-style: italic;
+    }
+    .resolve p { color: var(--muted); margin-top: 8px; }
+    .click-ring {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 0 0 rgba(232,184,109,0.6);
+      animation: clickpulse .9s ease-out 2;
+      margin-bottom: 16px;
+    }
+    @keyframes clickpulse {
+      to { box-shadow: 0 0 0 18px rgba(232,184,109,0); opacity: 0; }
+    }
+    .stage-progress {
+      position: absolute; bottom: 0; left: 0; height: 2px; width: 0;
+      background: var(--green); box-shadow: var(--glow);
+    }
+
+    /* EVENT VIEWER */
+    section { padding: 72px 0; }
+    .section-label {
+      font-size: 14px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; font-style: italic;
+      color: #b44aff; text-shadow: 0 0 12px rgba(43,184,106,0.4); margin-bottom: 10px;
+    }
+    h2 {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(36px, 6vw, 64px); font-weight: 700; font-style: italic; line-height: 1.05;
+      color: #fff; text-shadow: 0 0 12px rgba(43,184,106,0.4);
+    }
+    .lede { color: #b8f0d0; font-weight: 600; font-style: italic; margin-top: 12px; max-width: 58ch; text-shadow: 0 0 8px rgba(184,240,208,0.2); }
+
+    .viewer {
+      margin-top: 28px;
+      display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 18px;
+    }
+    .viewer-card, .side-card {
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: 16px; padding: 22px;
+    }
+    .viewer-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .asset {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 28px; font-weight: 600; letter-spacing: 0.04em;
+    }
+    .tier {
+      font-size: 11px; letter-spacing: 0.16em; font-weight: 700;
+      padding: 5px 9px; border-radius: 999px; border: 1px solid;
+    }
+    .tier.MINOR { color: #9aa3b2; border-color: #3a4150; }
+    .tier.MID { color: var(--gold); border-color: rgba(232,184,109,0.4); }
+    .tier.MAJOR { color: var(--green); border-color: rgba(180,74,255,0.45); background: rgba(180,74,255,0.08); }
+    .when {
+      margin: 18px 0 8px;
+      font-size: 13px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .clock {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: clamp(28px, 4vw, 42px); letter-spacing: 0.06em;
+    }
+    .countdown { margin-top: 6px; color: var(--dim); font-size: 13px; }
+    .viewer-actions { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+    .hedge {
+      flex: 1; min-width: 120px;
+      border-radius: 10px; padding: 12px; cursor: pointer; font-weight: 700;
+      border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text);
+    }
+    .hedge.up { border-color: rgba(180,74,255,0.35); }
+    .hedge.down { border-color: rgba(255,77,90,0.35); }
+    .hedge:hover { filter: brightness(1.1); }
+    .hedge small { display: block; font-weight: 500; color: var(--muted); font-size: 11px; margin-top: 4px; }
+    .note { margin-top: 14px; font-size: 12px; color: var(--dim); }
+    .live-alert {
+      display: none; margin-top: 16px;
+      border: 1px solid rgba(180,74,255,0.45);
+      background: rgba(180,74,255,0.07);
+      border-radius: 12px; padding: 12px 14px;
+    }
+    .live-alert.on { display: block; animation: flashin .4s ease; }
+    @keyframes flashin { from { opacity: 0; transform: translateY(6px); } }
+    .side-card h3 { font-size: 15px; margin-bottom: 12px; }
+    .turn-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px;
+    }
+    .turn-row:last-child { border-bottom: 0; }
+    .dot-ok { color: var(--green); }
+
+    /* GRID BLOCKS */
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 28px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: 14px; padding: 20px;
+    }
+    .card h3 { font-size: 18px; font-weight: 700; font-style: italic; margin: 8px 0 8px; color: #b44aff; text-shadow: 0 0 12px rgba(43,184,106,0.4); }
+    .card p { color: #b8f0d0; font-size: 15px; font-style: italic; }
+    .num {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 28px; color: var(--gold);
+    }
+    .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+    .pill {
+      border: 1px solid var(--line-strong); border-radius: 999px;
+      padding: 6px 12px; font-size: 12px; color: var(--muted);
+    }
+
+    /* STEPS */
+    .step { position: relative; }
+    .step .num { display: block; }
+
+    /* VERIFY */
+    .verify-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+    .tool {
+      background: var(--surface); border: 1px solid var(--line-strong);
+      border-radius: 16px; padding: 24px;
+    }
+    .tool a.btn { margin-top: 16px; }
+    .tape-panel {
+      margin-top: 22px;
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .tape-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+    .rule {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      background: var(--bg-2);
+    }
+    .rule h4 { font-size: 14px; margin-bottom: 6px; }
+    .rule p { font-size: 13px; color: var(--muted); }
+    .badge {
+      display: inline-block; font-size: 10px; letter-spacing: 0.14em;
+      font-weight: 700; padding: 3px 7px; border-radius: 999px;
+      font-family: "IBM Plex Mono", monospace;
+    }
+    .badge.quiet { color: var(--muted); border: 1px solid #3a4150; }
+    .badge.action { color: var(--gold); border: 1px solid rgba(232,184,109,0.45); }
+    .badge.match { color: var(--green); border: 1px solid rgba(180,74,255,0.4); }
+    .badge.flag { color: var(--red); border: 1px solid rgba(255,77,90,0.4); }
+    .recon { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+    .recon th { text-align: left; color: var(--dim); font-weight: 500; padding: 8px 8px 10px; border-bottom: 1px solid var(--line); }
+    .recon td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    .drop {
+      margin-top: 16px; border: 1px dashed var(--line-strong);
+      border-radius: 12px; padding: 18px; text-align: center;
+      color: var(--muted); font-size: 13px; background: #0b0d12;
+    }
+    .drop.hot { border-color: var(--green); color: var(--green); }
+    .steps-mini { margin-top: 8px; padding-left: 18px; color: var(--muted); font-size: 14px; }
+    .steps-mini li { margin: 6px 0; }
+    .stat-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 4px; }
+    .stat {
+      flex: 1; min-width: 120px; background: #0b0d12;
+      border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+    }
+    .stat b { display: block; font-family: "IBM Plex Mono", monospace; font-size: 20px; }
+    .stat span { font-size: 11px; color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase; }
+
+    /* SIGNUP */
+    .signup {
+      background:
+        radial-gradient(ellipse at 20% 0%, rgba(180,74,255,0.08), transparent 50%),
+        var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: 20px; padding: 36px;
+      display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 28px; align-items: center;
+    }
+    form { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    input[type="email"] {
+      flex: 1; min-width: 220px;
+      background: #0b0d12; border: 1px solid var(--line-strong);
+      color: var(--text); padding: 13px 14px; border-radius: 999px; outline: none;
+    }
+    input[type="email"]:focus { border-color: var(--green); }
+    .ok-msg { display: none; margin-top: 12px; color: var(--green); font-size: 14px; }
+    .ok-msg.on { display: block; }
+    .fine { margin-top: 10px; font-size: 12px; color: var(--dim); }
+
+    /* SHARE */
+    .share { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .pipe { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 28px; }
+    .pipe-step {
+      background: var(--surface); border: 1px solid var(--line-strong);
+      border-radius: 14px; padding: 18px; position: relative;
+    }
+    .pipe-step .tag { color: var(--green); letter-spacing: 0.16em; font-size: 11px; margin-bottom: 8px; }
+    .pipe-step h3 { font-size: 18px; margin-bottom: 8px; }
+    .pipe-step p { color: var(--muted); font-size: 13px; }
+    .proof {
+      margin-top: 22px; border: 1px solid rgba(180,74,255,0.28);
+      border-radius: 16px; padding: 22px;
+      background: linear-gradient(180deg, rgba(180,74,255,0.05), transparent 40%), var(--surface);
+    }
+    .proof ol { margin: 12px 0 0 18px; color: var(--muted); font-size: 14px; }
+    .proof ol li { margin: 8px 0; }
+    .cfg { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .cfg span {
+      font-family: "IBM Plex Mono", monospace; font-size: 11px;
+      border: 1px solid var(--line-strong); border-radius: 999px; padding: 5px 10px; color: var(--muted);
+    }
+    .pill.twf { cursor: pointer; background: transparent; }
+    .pill.twf.on { color: var(--green); border-color: rgba(180,74,255,0.45); }
+    .share a, .share button {
+      background: var(--surface-2); border: 1px solid var(--line);
+      color: var(--text); padding: 8px 12px; border-radius: 999px;
+      font-size: 12px; cursor: pointer;
+    }
+    .visitors { margin-top: 14px; color: var(--muted); font-size: 13px; }
+
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 28px 0 48px;
+      color: var(--dim); font-size: 12px;
+    }
+    .foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+
+    .theme-btn {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--line-strong);
+      border-radius: 999px; padding: 8px 12px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .hero { position: relative; }
+    .hero-copy { position: relative; margin-top: 28px; padding-top: 8px; }
+    /* ---- BACKGROUND AMARTIE SCENE CYCLE ---- */
+    .bg-amartie {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -3; pointer-events: none;
+      background: radial-gradient(ellipse at 30% 50%, #0d1117 0%, #07080b 70%, #040507 100%);
+    }
+
+    .hero-wm {
+      position: absolute; inset: -20px 0 auto 0; height: 540px;
+      overflow: hidden; pointer-events: none; z-index: 0;
+      mask-image: linear-gradient(180deg, #000 0%, #000 42%, transparent 92%);
+    }
+    .hero-wm video {
+      width: 100%; height: 100%; object-fit: contain; object-position: center;
+      opacity: 0.42; filter: saturate(0.7) contrast(1.12) brightness(0.82);
+    }
+    .hero-wm video.wm2 {
+      position: absolute; inset: 0; object-position: 78% 18%;
+      opacity: 0.6; mix-blend-mode: screen; filter: saturate(0.55) contrast(1.2);
+    }
+    .hero-wm .scrim {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(90deg, rgba(7,8,11,0.88) 0%, rgba(7,8,11,0.55) 38%, rgba(7,8,11,0.18) 70%, rgba(7,8,11,0.72) 100%),
+        linear-gradient(180deg, rgba(7,8,11,0.2), rgba(7,8,11,0.85));
+    }
+    .hero-wm .grain {
+      position: absolute; inset: -20%;
+      opacity: 0.3; mix-blend-mode: overlay; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      animation: grain 1.6s steps(2) infinite;
+    }
+    @keyframes grain { 0% { transform: translate(0,0); } 100% { transform: translate(-2%, 3%); } }
+    .hero-wm     .watermark {
+      position: fixed; pointer-events: none; z-index: 2;
+      opacity: 0.6;
+    }
+    .watermark.wm-tl {
+      bottom: 24px; left: 24px; width: 200px; border-radius: 10px;
+    }
+    .watermark.wm-br {
+      top: 24px; right: 24px; width: 200px; border-radius: 10px; transform: scaleX(-1);
+    }
+    .watermark.wm-tr3 { top: 20px; right: 220px; width: 120px; border-radius: 10px; opacity: 0.5; }
+    .watermark.wm-bl3 { bottom: 20px; left: 380px; width: 130px; border-radius: 10px; opacity: 0.5; }
+    @media (max-width: 860px) {
+      .watermark { display: none; }
+    }
+    .mark {
+      position: absolute; right: 18px; bottom: 28px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: rgba(236,234,227,0.28);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-wm video, .cast-card video { display: none; }
+      .hero-wm .grain { animation: none; }
+    }
+    .hero .kicker, .hero h1, .hero .subhead, .hero-actions, .hero .stage { position: relative; z-index: 1; }
+    .cast { padding: 8px 0 10px; }
+    .cast-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .cast-card {
+      position: relative; border-radius: 18px; overflow: hidden;
+      border: 1px solid var(--line-strong); min-height: 420px;
+      background: var(--surface);
+    }
+    .cast-card video, .cast-card img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      min-height: 420px;
+    }
+    .cast-card video { opacity: 1.0; }
+    .cast-label {
+      position: absolute; left: 14px; bottom: 14px;
+      background: rgba(7,8,11,0.72); color: #eceae3;
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(8px);
+      padding: 8px 12px; border-radius: 999px;
+      font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    html[data-theme="light"] {
+      --bg: #f3ead8;
+      --bg-2: #efe4cd;
+      --surface: #fffaf0;
+      --surface-2: #f7f0e2;
+      --line: rgba(42, 28, 10, 0.10);
+      --line-strong: rgba(42, 28, 10, 0.22);
+      --text: #1b140c;
+      --muted: #5a4c3a;
+      --dim: #7a6a55;
+      --green: #b44aff;
+      --green-deep: #d4aaff;
+      --red: #c81e33;
+      --gold: #9a6a14;
+      --gold-soft: #c4891c;
+      --glow: 0 0 22px rgba(6,122,69,0.28);
+    }
+    html[data-theme="light"] body {
+      background: var(--bg);
+      color: var(--text);
+    }
+    html[data-theme="light"] body::before {
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(6,122,69,0.14), transparent 50%),
+        radial-gradient(ellipse 40% 30% at 90% 10%, rgba(196,137,28,0.16), transparent 50%),
+        linear-gradient(rgba(80,50,10,0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(80,50,10,0.045) 1px, transparent 1px);
+    }
+    html[data-theme="light"] nav { background: rgba(243,234,216,0.82); }
+    html[data-theme="light"] .stage {
+      background: linear-gradient(180deg, #fffdf7 0%, #f3e8d0 100%);
+    }
+    html[data-theme="light"] .hero-wm video {
+      opacity: 0.42; mix-blend-mode: multiply;
+      filter: saturate(1.25) contrast(1.18) brightness(1.05);
+    }
+    html[data-theme="light"] .hero-wm video.wm2 { opacity: 0.6; mix-blend-mode: multiply; }
+    html[data-theme="light"] .hero-wm .scrim {
+      background:
+        linear-gradient(90deg, rgba(243,234,216,0.92) 0%, rgba(243,234,216,0.55) 42%, rgba(243,234,216,0.2) 72%, rgba(243,234,216,0.78) 100%),
+        linear-gradient(180deg, rgba(243,234,216,0.15), rgba(243,234,216,0.88));
+    }
+    html[data-theme="light"] .hero-wm .mark { color: rgba(27,20,12,0.28); }
+    html[data-theme="light"] .btn-primary { color: #f4fff8; }
+    html[data-theme="light"] .live-strip { background: #1b140c; color: #f3ead8; }
+    @media (max-width: 860px) {
+      .cast-grid { grid-template-columns: 1fr; }
+      .hero-wm { height: 380px; }
+    }
+
+    @media (max-width: 860px) {
+      .nav-links { display: none; }
+      .viewer, .grid-3, .grid-4, .verify-grid, .signup, .tape-grid, .pipe { grid-template-columns: 1fr; }
+      .dual.on { grid-template-columns: 1fr; height: auto; }
+      .stage-body { height: 480px; }
+      .hero { padding-top: 36px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="logo" href="#top">
+        <span class="logo-mark" aria-hidden="true"></span>
+        ORACLE SYSTEM
+      </a>
+      <div class="nav-links">
+        <a href="#viewer">Event viewer</a>
+        <a href="#how">How it works</a>
+        <a href="#clock">The clock</a>
+        <a href="#verify">Verify</a>
+        <a href="#tape">Tape Witness</a>
+        <a href="#trade">Trade Witness</a>
+        <a href="#model">Pay from profits</a>
+      </div>
+      <button class="theme-btn" id="themeBtn" type="button">Light</button>
+      <a class="nav-cta" href="#signup">Register free</a>
+    </div>
+  </nav>
+
+  <div class="live-strip">
+    <span class="pulse"></span>
+    <span class="mono" id="stripText">WATCHING THE TAPE — NEXT WINDOW ARMED</span>
+    <span>·</span>
+    <span><span id="visitorCount">1,284</span> traders on the clock</span>
+  </div>
+
+  <div class="bg-amartie" id="bgAmartie"></div>
+  <header class="hero wrap" id="top">
+    <div class="stage" aria-label="Product demonstration">
+      <div class="stage-chrome">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="mono">ORACLE · LIVE DEMO · LOOP 15s</span>
+        <span class="mono" id="stageClock">--:--:--</span>
+      </div>
+      <div class="stage-body">
+        <div class="phase-caption" id="caption">Watching the tape — is it up or down?</div>
+        <video class="stage-film on" id="filmA" autoplay muted loop playsinline poster="static/img/preview_s1.png">
+          <source src="static/video/dual1.mp4" type="video/mp4" />
+        </video>
+        <canvas id="candles" width="3120" height="80"></canvas>
+        <div class="dual" id="dual">
+          <div class="mini-chart">
+            <video autoplay muted loop playsinline poster="static/img/preview_s1.png">
+              <source src="static/video/dual1.mp4" type="video/mp4" />
+            </video>
+          </div>
+          <div class="mini-chart">
+            <video autoplay muted loop playsinline poster="static/img/preview_s2.png">
+              <source src="static/video/dual2.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </div>
+        <div class="alert-banner" id="alertBanner">
+          <div class="tag">EVENT ALERT</div>
+          <h3>EVENT — BTC — 14:00</h3>
+          <div class="alert-line"></div>
+        </div>
+        <div class="resolve" id="resolve">
+          <div class="click-ring"></div>
+          <div class="smile">No more FOMO.</div>
+        </div>
+        <div class="stage-progress" id="progress"></div>
+      </div>
+    </div>
+    <div class="hero-copy">
+      <div class="hero-wm" aria-hidden="true">
+        <div class="scrim"></div>
+        <div class="grain"></div>
+        <img class="watermark wm-tl" src="static/img/preview_s1.png" alt="">
+        <img class="watermark wm-br" src="static/img/preview_s2.png" alt="">
+        <!-- Scroll-timestamp screenshots as additional watermark layer -->
+        <img class="watermark wm-tl2" src="static/img/screen_220530.png" alt="">
+        <img class="watermark wm-br2" src="static/img/screen_223248.png" alt="">
+        <img class="watermark wm-bl2" src="static/img/screen_223046.png" alt="">
+        <!-- Scared/worried contrast faces -->
+        <img class="watermark wm-tr3" src="static/img/scared_2231.png" alt="">
+        <img class="watermark wm-bl3" src="static/img/gemini_worried.png" alt="">
+        <div class="mark">ORACLE · THE WHEN</div>
+      </div>
+      <div class="kicker">Market timing · Not direction · Not price</div>
+      <h1>No more <em>FOMO</em>.</h1>
+      <p class="subhead">Not the exact minute — it's in a small time period. Our times are NY session. The WHEN is the product.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#signup">Get 3 free events</a>
+        <a class="btn btn-ghost" href="#viewer">Watch the next window</a>
+      </div>
+    </div>
+  </header>
+
+  <section id="viewer">
+    <div class="wrap">
+      <div class="section-label">The product</div>
+      <h2>The event viewer.</h2>
+      <p class="lede">A live display of the next scheduled window. When it opens, the alert fires. You decide the hedge. The ORACLE never says up or down.</p>
+
+      <div class="viewer">
+        <div class="viewer-card">
+          <div class="viewer-top">
+            <div>
+              <div class="when">Next scheduled event</div>
+              <div class="asset" id="evAsset">BTC</div>
+            </div>
+            <span class="tier MAJOR" id="evTier">MAJOR</span>
+          </div>
+          <div class="when">Window</div>
+          <div class="clock mono" id="evTime">14:00:00</div>
+          <div class="countdown mono" id="evCount">opens in —</div>
+          <div class="live-alert" id="liveAlert">
+            <strong style="color:var(--green)">EVENT LIVE</strong>
+            <span class="mono"> — window open. Hedge now. Direction is yours.</span>
+          </div>
+          <div class="viewer-actions">
+            <button class="hedge up" data-side="LONG">HEDGE LONG<small>Your call. Not ours.</small></button>
+            <button class="hedge down" data-side="SHORT">HEDGE SHORT<small>Your call. Not ours.</small></button>
+          </div>
+          <p class="note" id="hedgeNote">Register free to lock this window. One event per day. Wrong events cost nothing.</p>
+        </div>
+        <div class="side-card">
+          <h3>Recent windows</h3>
+          <div id="turnLog"></div>
+          <p class="note" style="margin-top:14px"><a href="#record" style="color:var(--gold)">See the record yourself →</a></p>
+        </div>
+      </div>
+
+      <div class="pill-row">
+        <span class="pill">MINOR · expected noise / local turn</span>
+        <span class="pill">MID · tradable window</span>
+        <span class="pill">MAJOR · session-defining event</span>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="cast" id="faces">
+    <div class="wrap">
+      <div class="section-label">The click</div>
+      <h2>Same minute.<br>Any desk.</h2>
+      <p class="lede">The WHEN is the product. The face on the other side of the screen is whoever sat the window.</p>
+      <div class="cast-grid">
+        <article class="cast-card">
+          <video autoplay muted loop playsinline poster="static/img/preview_s1.png">
+            <source src="static/video/dual1.mp4" type="video/mp4" />
+          </video>
+          <span class="cast-label">The window · then the click</span>
+        </article>
+        <article class="cast-card">
+          <video autoplay muted loop playsinline poster="static/img/preview_s2.png">
+            <source src="static/video/dual2.mp4" type="video/mp4" />
+          </video>
+          <span class="cast-label">3 · then NOW</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="pitch" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-label">The only product</div>
+      <h2>We tell you WHEN.<br>You choose the side.</h2>
+      <p class="lede">Every retail trader stares at red and green candles with no clear trend and freezes. FOMO does the rest. The ORACLE watches the tape and names the minute the event fires. Hedge either way. Keep 100% of the gain.</p>
+      <div class="grid-3">
+        <div class="card">
+          <div class="num">01</div>
+          <h3>Not direction</h3>
+          <p>We do not call up or down. Two screens can diverge. The window is the same. The side is yours.</p>
+        </div>
+        <div class="card">
+          <div class="num">02</div>
+          <h3>Not price</h3>
+          <p>Targets, entries, and “where it lands” are irrelevant. The product is the scheduled minute.</p>
+        </div>
+        <div class="card">
+          <div class="num">03</div>
+          <h3>Only the WHEN</h3>
+          <p>Asset. Window. Tier. That’s the entire public call. Verify the minute against your own chart — then against Tape Witness.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="section-label">Zero risk to start</div>
+      <h2>How it works.</h2>
+      <div class="grid-4">
+        <div class="card step">
+          <span class="num">1</span>
+          <h3>Sign up free</h3>
+          <p>Email only. No credit card. No commitment. Immediate access.</p>
+        </div>
+        <div class="card step">
+          <span class="num">2</span>
+          <h3>Three free events</h3>
+          <p>One event per day. Watch the window open on the viewer. Confirm it on your chart.</p>
+        </div>
+        <div class="card step">
+          <span class="num">3</span>
+          <h3>Hedge the alert</h3>
+          <p>When the banner fires, you take the side. Long or short — your decision.</p>
+        </div>
+        <div class="card step">
+          <span class="num">4</span>
+          <h3>Pay from profits</h3>
+          <p>After the free events, settle from winnings. Wrong events: you pay nothing.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="clock">
+    <div class="wrap">
+      <div class="section-label">The clock</div>
+      <h2>The WHEN is posted before you need it.</h2>
+      <p class="lede">You get the asset, the window, and the tier. That is the public product. Proof is the broker book against the published minute.</p>
+
+      <div class="pipe">
+        <div class="pipe-step">
+          <div class="tag mono">01</div>
+          <h3>The window posts</h3>
+          <p>Next event on the viewer: asset, time, MINOR / MID / MAJOR. Direction is still yours.</p>
+        </div>
+        <div class="pipe-step">
+          <div class="tag mono">02</div>
+          <h3>You hedge the minute</h3>
+          <p>When the alert fires, you take a side. The ORACLE does not pick it.</p>
+        </div>
+        <div class="pipe-step">
+          <div class="tag mono">03</div>
+          <h3>Tape Witness</h3>
+          <p>Quiet minutes match. Action minutes diverge. Your click either landed in the published window or it didn’t.</p>
+        </div>
+        <div class="pipe-step">
+          <div class="tag mono">04</div>
+          <h3>Trade Witness</h3>
+          <p>The fill log. Signal vs print. Ghosts, rejects, and fills stay visible so activity cannot pose as the WHEN.</p>
+        </div>
+      </div>
+
+      <div class="proof">
+        <div class="kicker" style="margin:0 0 8px">Broker book</div>
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600">Trade Witness holds the prints. The call log scores the WHEN.</h3>
+        <p class="lede" style="margin-top:8px">The public page shows fills and flags from the broker export. A fill is only IN WINDOW when it is scored against a published event window.</p>
+        <a class="btn btn-ghost" style="margin-top:16px" href="#trade">Open the broker book</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="model">
+    <div class="wrap">
+      <div class="section-label">The deal</div>
+      <h2>Pay from profits.<br>Wrong events are free.</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Wrong event</h3>
+          <p>If the window does not serve you, you owe nothing. The ORACLE eats the miss.</p>
+        </div>
+        <div class="card">
+          <h3>Correct, unpaid</h3>
+          <p>If you win a billed event and have not settled, access pauses until you do.</p>
+        </div>
+        <div class="card">
+          <h3>You keep 100%</h3>
+          <p>No revenue share on the trade. No card upfront. Proof first, then pay from the book.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="verify">
+    <div class="wrap">
+      <div class="section-label">No blind faith</div>
+      <h2>Verify the timing yourself.</h2>
+      <p class="lede">Two open-source witnesses. Tape Witness is the proof layer for the WHEN — it reconciles your broker’s click minutes against the ORACLE’s calls. Trade Witness watches fills after the click.</p>
+      <div class="verify-grid">
+        <div class="tool">
+          <div class="kicker" style="margin:0 0 8px">Open source · proof of WHEN</div>
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600">Tape Witness</h3>
+          <p class="lede" style="margin-top:8px">Drop a broker export. The tool maps every minute: quiet minutes must match the call log (no click, no event). Action minutes must diverge — and those clicks should land inside a scheduled window.</p>
+          <a class="btn btn-ghost" href="#tape">Read the verification method</a>
+        </div>
+        <div class="tool">
+          <div class="kicker" style="margin:0 0 8px">Always on · proof of fill</div>
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600">Trade Witness</h3>
+          <p class="lede" style="margin-top:8px">A session log that watches your fills and flags the anomalies — entries that land inside a called window versus noise outside it.</p>
+          <a class="btn btn-ghost" href="#trade">Read the session-log method</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tape" style="padding-top:0">
+    <div class="wrap">
+      <div class="tape-panel">
+        <div class="kicker" style="margin:0 0 8px">Verification method</div>
+        <h2>Tape Witness — quiet matches, action diverges.</h2>
+        <p class="lede">The ORACLE does not ask you to trust a screenshot. Tape Witness takes two clocks and lays them on the same minute grid: the published event windows, and the exact minutes you clicked at the broker. If the timing is real, the pattern is brutal and simple.</p>
+
+        <div class="tape-grid">
+          <div class="rule">
+            <span class="badge quiet">QUIET</span>
+            <span class="badge match">MUST MATCH</span>
+            <h4 style="margin-top:12px">Quiet minutes match</h4>
+            <p>Any minute with no broker click and no ORACLE window should be identical on both records: empty. If the call log is clean and you didn’t click, the tape is quiet. Silence is the control sample.</p>
+          </div>
+          <div class="rule">
+            <span class="badge action">ACTION</span>
+            <span class="badge match">SHOULD DIVERGE</span>
+            <h4 style="margin-top:12px">Action minutes diverge</h4>
+            <p>A click is a divergence from the quiet tape. If you hedged the event, that click minute should sit inside the scheduled window — not three minutes early, not eighteen minutes late.</p>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat"><b id="twQuiet">11</b><span>Quiet minutes matched</span></div>
+          <div class="stat"><b id="twIn">1</b><span>Clicks inside window</span></div>
+          <div class="stat"><b id="twOut">1</b><span>Clicks outside window</span></div>
+          <div class="stat"><b id="twScore">50%</b><span>In-window click ratio</span></div>
+        </div>
+
+        <h3 style="margin:22px 0 8px;font-size:16px">How you run it</h3>
+        <ol class="steps-mini">
+          <li>Export the session from your broker as CSV or blotter (timestamp, symbol, side). Minute resolution is enough — seconds are better.</li>
+          <li>Load the same session’s ORACLE call log: asset, scheduled window, tier, published-before timestamp.</li>
+          <li>Tape Witness buckets both files onto a one-minute grid in one timezone (exchange time, not local guesswork).</li>
+          <li>Every minute is tagged <span class="badge quiet">QUIET</span> or <span class="badge action">ACTION</span>, then scored <span class="badge match">MATCH</span> or <span class="badge flag">OUTSIDE</span>.</li>
+          <li>You keep the file. The hash of the export plus the call log is the receipt — no one can rewrite the WHEN after you clicked.</li>
+        </ol>
+
+        <h3 style="margin:22px 0 4px;font-size:16px">Scored book · Sept 25 · MBT</h3>
+        <p class="note">Published window status against the four broker prints. Two in the window. Two off the clock. Tape Witness scores the fill minute against the published call.</p>
+        <div style="overflow:auto">
+          <table class="recon">
+            <thead>
+              <tr>
+                <th>Fill</th>
+                <th>Side</th>
+                <th>Window</th>
+                <th>Price</th>
+                <th>Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">12:53 ET</td>
+                <td class="mono">BUY</td>
+                <td>MID</td>
+                <td class="mono">84230</td>
+                <td><span class="badge match">IN WINDOW</span></td>
+              </tr>
+              <tr>
+                <td class="mono">13:00 ET</td>
+                <td class="mono">SELL</td>
+                <td>—</td>
+                <td class="mono">84140</td>
+                <td><span class="badge flag">OFF CLOCK</span></td>
+              </tr>
+              <tr>
+                <td class="mono">13:11 ET</td>
+                <td class="mono">SELL</td>
+                <td>MID</td>
+                <td class="mono">84300</td>
+                <td><span class="badge match">IN WINDOW</span></td>
+              </tr>
+              <tr>
+                <td class="mono">13:26 ET</td>
+                <td class="mono">BUY</td>
+                <td>—</td>
+                <td class="mono">84275</td>
+                <td><span class="badge flag">OFF CLOCK</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><b>2</b><span>In window</span></div>
+          <div class="stat"><b>2</b><span>Off clock</span></div>
+          <div class="stat"><b>50%</b><span>In-window fill ratio</span></div>
+          <div class="stat"><b>4</b><span>Prints scored</span></div>
+        </div>
+
+        <h3 style="margin:22px 0 4px;font-size:16px">Sample reconciliation · BTC MAJOR · window 14:00</h3>
+        <p class="note">Illustrative session. Replace with your broker export below.</p>
+        <div style="overflow:auto">
+          <table class="recon" id="reconTable">
+            <thead>
+              <tr>
+                <th>Minute</th>
+                <th>Oracle</th>
+                <th>Broker click</th>
+                <th>Tape</th>
+                <th>Verdict</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="drop" id="dropZone">
+          Drop a broker CSV here — columns <span class="mono">time,side,symbol</span> (e.g. <span class="mono">14:00:12,BUY,BTC</span>)<br />
+          <label class="btn btn-ghost" style="margin-top:12px;display:inline-flex">
+            Choose file
+            <input type="file" id="csvInput" accept=".csv,text/csv,text/plain" hidden />
+          </label>
+          <div class="fine" id="csvStatus" style="margin-top:8px">No file loaded. Showing the sample tape.</div>
+        </div>
+
+        <p class="note" style="margin-top:16px">
+          What a clean tape looks like: long stretches of quiet MATCH, then one ACTION minute that lands inside the published window. Clicks far from a called window are not “the ORACLE was wrong about direction” — they are you trading off-clock. Direction was never the product.
+        </p>
+        <a class="btn btn-ghost" style="margin-top:16px" href="https://github.com/oracle-system/tape-witness" target="_blank" rel="noopener">Open Tape Witness on GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="trade" style="padding-top:0">
+    <div class="wrap">
+      <div class="tape-panel">
+        <div class="kicker" style="margin:0 0 8px">Always-on session log</div>
+        <h2>Trade Witness — the fill, not the click.</h2>
+        <p class="lede">Tape Witness proves you clicked the WHEN. Trade Witness proves what actually filled. It stays on for the whole session, watches every fill, and flags anything that does not belong to a published window. It does not score direction. It does not score P&amp;L. Those were never the product.</p>
+
+        <div class="tape-grid">
+          <div class="rule">
+            <span class="badge match">IN WINDOW</span>
+            <h4 style="margin-top:12px">Fill inside the call</h4>
+            <p>A fill whose timestamp sits inside a scheduled window — and follows a hedge click on Tape Witness — is a clean event fill. This is the only fill type that counts as “you traded the WHEN.”</p>
+          </div>
+          <div class="rule">
+            <span class="badge flag">ANOMALY</span>
+            <h4 style="margin-top:12px">Fill that doesn’t belong</h4>
+            <p>Off-clock fills, fills with no prior click, clicks with no fill, and fills that land long after the window closes are flagged. Noise is visible. The session cannot hide it.</p>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat"><b id="trFills">7</b><span>Fills in book</span></div>
+          <div class="stat"><b id="trIn">55</b><span>Signals, no fill</span></div>
+          <div class="stat"><b id="trFlag">23</b><span>Ghosts (signal, no fill)</span></div>
+          <div class="stat"><b id="trLag">2.0s</b><span>Fastest measured lag</span></div>
+        </div>
+
+        <h3 style="margin:22px 0 8px;font-size:16px">What it watches</h3>
+        <ol class="steps-mini">
+          <li><strong>Always on.</strong> Starts with the session. Does not wait for an alert. Every fill is logged whether an event is live or not — that is how off-clock noise becomes visible.</li>
+          <li><strong>Binds to Tape Witness.</strong> Each fill is paired to the nearest hedge click on the same symbol. No click → orphan fill. Click with no fill → ghost window.</li>
+          <li><strong>Windows only, not sides.</strong> Long or short is your mark. Trade Witness only asks: did the fill land inside the published minute?</li>
+          <li><strong>Lag.</strong> Seconds from click to fill are recorded. A 2-second fill in-window is clean. A fill that prints 11 minutes later is not the same trade as the click.</li>
+          <li><strong>Receipt.</strong> The running log is hash-chained. You can export it next to the Tape Witness file. Two clocks, one session, neither rewritten after the fact.</li>
+        </ol>
+
+        <h3 style="margin:22px 0 8px;font-size:16px">Anomaly book</h3>
+        <div class="tape-grid">
+          <div class="rule">
+            <span class="badge match">IN WINDOW</span>
+            <h4 style="margin-top:10px">Clean event fill</h4>
+            <p>Click in window. Fill in window. Same symbol. Lag inside tolerance. No flag.</p>
+          </div>
+          <div class="rule">
+            <span class="badge flag">OFF CLOCK</span>
+            <h4 style="margin-top:10px">Fill outside any window</h4>
+            <p>You traded. The ORACLE had not called that minute. Counts as noise, not as an event.</p>
+          </div>
+          <div class="rule">
+            <span class="badge flag">ORPHAN</span>
+            <h4 style="margin-top:10px">Fill, no hedge click</h4>
+            <p>A fill appears with no Tape Witness action on that symbol. Manual, bot, or fat-finger — not an Oracle hedge.</p>
+          </div>
+          <div class="rule">
+            <span class="badge flag">GHOST</span>
+            <h4 style="margin-top:10px">Click, no fill</h4>
+            <p>You marked the window. Nothing filled. Rejected, unsent, or pulled. The WHEN was used; the book did not.</p>
+          </div>
+          <div class="rule">
+            <span class="badge flag">LATE</span>
+            <h4 style="margin-top:10px">Fill after the window</h4>
+            <p>Click was on time. Fill printed well after close. Slippage or queue — not the scheduled minute.</p>
+          </div>
+          <div class="rule">
+            <span class="badge action">DOUBLE</span>
+            <h4 style="margin-top:10px">Extra fills in one window</h4>
+            <p>One hedge logged, more than one fill. Scale-in or accident. Flagged so the session cannot pretend it was a single event.</p>
+          </div>
+        </div>
+
+        <h3 style="margin:22px 0 4px;font-size:16px">Live session · broker export</h3>
+        <p class="note">Parsed from broker exports: 85 strategy rows + 1 orders-file fill. Aug 24 – Sep 25, 2026. Trade Witness scores fill vs signal. A fill is IN WINDOW only against a published event minute.</p>
+        <div class="pill-row" id="twFilters" style="margin-top:12px">
+          <button type="button" class="pill twf on" data-f="ALL">All</button>
+          <button type="button" class="pill twf" data-f="FILL">Fills</button>
+          <button type="button" class="pill twf" data-f="GHOST">Ghosts</button>
+          <button type="button" class="pill twf" data-f="SIGNAL">Signals, no fill</button>
+          <button type="button" class="pill twf" data-f="REJECT">Rejects</button>
+        </div>
+        <div style="overflow:auto; max-height:420px">
+          <table class="recon" id="tradeTable">
+            <thead>
+              <tr>
+                <th>Signal time</th>
+                <th>Contract</th>
+                <th>Side · qty</th>
+                <th>Fill</th>
+                <th>Lag</th>
+                <th>Flag</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="drop" id="fillDrop">
+          Drop another export — TradersPost trades CSV, or <span class="mono">time,side,size,price,symbol</span><br />
+          <label class="btn btn-ghost" style="margin-top:12px;display:inline-flex">
+            Choose fill file
+            <input type="file" id="fillInput" accept=".csv,text/csv,text/plain" hidden />
+          </label>
+          <div class="fine" id="fillStatus" style="margin-top:8px">Showing parsed broker session.</div>
+        </div>
+
+        <p class="note" style="margin-top:16px">
+          This book is loud on purpose. 7 fills made the broker. 23 ghosts — signal sent, nothing filled (exit timeout or not enough margin). 55 signals with no fill in the trades export. 1 reject (cancel). Activity is not the WHEN. A fill is a fill. Everything else is a flag.
+        </p>
+        <a class="btn btn-ghost" style="margin-top:16px" href="https://github.com/oracle-system/trade-witness" target="_blank" rel="noopener">Open Trade Witness on GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="record">
+    <div class="wrap">
+      <div class="section-label">Public clock</div>
+      <h2>See the record yourself.</h2>
+      <p class="lede">Illustrative turn log for this page. On the live system, every call is time-stamped before the window and can be checked against your own chart.</p>
+      <div class="card" style="margin-top:20px; overflow:auto">
+        <table style="width:100%; border-collapse:collapse; font-size:13px; font-family:'IBM Plex Mono',monospace">
+          <thead>
+            <tr style="color:var(--dim); text-align:left">
+              <th style="padding:8px 8px 12px">Called</th>
+              <th style="padding:8px 8px 12px">Asset</th>
+              <th style="padding:8px 8px 12px">Window</th>
+              <th style="padding:8px 8px 12px">Tier</th>
+              <th style="padding:8px 8px 12px">Status</th>
+            </tr>
+          </thead>
+          <tbody id="recordBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="signup">
+    <div class="wrap">
+      <div class="signup">
+        <div>
+          <div class="section-label">Start today</div>
+          <h2>Three free events.<br>No card. No FOMO.</h2>
+          <p class="lede">Register with an email. Watch one window a day. If the timing is real, you already know what to do next.</p>
+          <form id="regForm">
+            <input type="email" id="email" required placeholder="you@desk.com" autocomplete="email" />
+            <button class="btn btn-primary" type="submit">Register free</button>
+          </form>
+          <p class="ok-msg" id="okMsg">You’re on the clock. Three free events unlocked. Watch the viewer — one window per day.</p>
+          <p class="fine">Immediate access. No payment step. Wrong events stay free after the trial.</p>
+        </div>
+        <div>
+          <div class="visitors"><span class="pulse" style="display:inline-block;vertical-align:middle;margin-right:8px"></span><span id="visitorCount2">1,284</span> traders watching the next window</div>
+          <div class="share" aria-label="Share">
+            <button type="button" data-share="x">X</button>
+            <button type="button" data-share="facebook">Facebook</button>
+            <button type="button" data-share="reddit">Reddit</button>
+            <button type="button" data-share="whatsapp">WhatsApp</button>
+            <button type="button" data-share="telegram">Telegram</button>
+            <button type="button" data-share="linkedin">LinkedIn</button>
+            <button type="button" data-share="email">Email</button>
+          </div>
+          <p class="fine" style="margin-top:16px">Share the WHEN. Not a tip. Not a pump. A clock.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap foot">
+      <div>ORACLE SYSTEM · We sell timing. Not direction. Not price. The WHEN.</div>
+      <div>Demonstration page. Not financial advice. Markets can lose money. Verify every window yourself.</div>
+    </div>
+  </footer>
+
+  <script>
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches === false) {
+      const hold = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          const vids = en.target.querySelectorAll("video");
+          vids.forEach((v) => { if (en.isIntersecting) v.play().catch(() => {}); else v.pause(); });
+        });
+      }, { threshold: 0.12 });
+      document.querySelectorAll(".hero-wm, .cast-card").forEach((el) => hold.observe(el));
+    }
+
+    const root = document.documentElement;
+    const themeBtn = document.getElementById("themeBtn");
+    const savedTheme = localStorage.getItem("oracle_theme") || "dark";
+    root.setAttribute("data-theme", savedTheme);
+    if (themeBtn) themeBtn.textContent = savedTheme === "light" ? "Dark" : "Light";
+    themeBtn && themeBtn.addEventListener("click", () => {
+      const next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
+      root.setAttribute("data-theme", next);
+      localStorage.setItem("oracle_theme", next);
+      themeBtn.textContent = next === "light" ? "Dark" : "Light";
+    });
+
+    /* ---------- clock + visitors ---------- */
+    const pad = n => String(n).padStart(2, "0");
+    const fmt = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    let visitors = 1284 + Math.floor(Math.random() * 80);
+    const bumpVisitors = () => {
+      if (Math.random() < 0.35) visitors += Math.random() < 0.5 ? 1 : -1;
+      visitors = Math.max(1200, visitors);
+      document.getElementById("visitorCount").textContent = visitors.toLocaleString();
+      document.getElementById("visitorCount2").textContent = visitors.toLocaleString();
+    };
+    setInterval(bumpVisitors, 2800);
+
+    /* ---------- candlestick draw ---------- */
+    function makeSeries(n, start, drift) {
+      const out = [];
+      let p = start;
+      for (let i = 0; i < n; i++) {
+        const o = p;
+        const shock = (Math.random() - 0.48) * 2.2 + drift;
+        const c = o + shock;
+        const h = Math.max(o, c) + Math.random() * 0.9;
+        const l = Math.min(o, c) - Math.random() * 0.9;
+        out.push({ o, h, l, c });
+        p = c;
+      }
+      return out;
+    }
+    function drawCandles(canvas, series, opts = {}) {
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      let min = Infinity, max = -Infinity;
+      series.forEach(c => { min = Math.min(min, c.l); max = Math.max(max, c.h); });
+      const padY = (max - min) * 0.12 || 1;
+      min -= padY; max += padY;
+      const y = v => h - ((v - min) / (max - min)) * h;
+      const bw = Math.max(3, (w / series.length) * 0.62);
+      const gap = w / series.length;
+      series.forEach((c, i) => {
+        const x = i * gap + gap / 2;
+        const up = c.c >= c.o;
+        const pal = candleColors();
+        ctx.strokeStyle = ctx.fillStyle = up ? pal.up : pal.down;
+        ctx.globalAlpha = 0.95;
+        ctx.beginPath();
+        ctx.moveTo(x, y(c.h)); ctx.lineTo(x, y(c.l)); ctx.stroke();
+        const top = y(Math.max(c.o, c.c));
+        const bot = y(Math.min(c.o, c.c));
+        ctx.fillRect(x - bw / 2, top, bw, Math.max(1, bot - top));
+      });
+      if (opts.markIndex != null) {
+        const i = opts.markIndex;
+        const x = i * gap + gap / 2;
+        ctx.strokeStyle = candleColors().mark;
+        ctx.globalAlpha = 0.85;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = candleColors().mark;
+        ctx.globalAlpha = 1;
+        ctx.fillRect(x - 1, 0, 2, h);
+      }
+    }
+
+    const mainCanvas = document.getElementById("candles");
+    const filmA = document.getElementById("filmA");
+    const upCanvas = document.getElementById("upChart");
+    const downCanvas = document.getElementById("downChart");
+    let series = makeSeries(42, 100, 0);
+    let upSeries = makeSeries(28, 100, 0.18);
+    let downSeries = makeSeries(28, 100, -0.18);
+
+    function candleColors() {
+      const light = document.documentElement.getAttribute("data-theme") === "light";
+      return light
+        ? { up: "#0af57a", down: "#ff2d3d", mark: "#e8b86d", glow: "rgba(10,245,122,0.4)" }
+        : { up: "#b44aff", down: "#ff4d5a", mark: "#e8b86d", glow: "rgba(180,74,255,0.4)" };
+    }
+    let lastCandle = 0;
+    function tickCharts(phase, force) {
+      const now = performance.now();
+      if (!force && now - lastCandle < 920) return;
+      lastCandle = now;
+      const last = series[series.length - 1].c;
+      series.push(makeSeries(1, last, (Math.random() - 0.5) * 0.08)[0]);
+      if (series.length > 48) series.shift();
+      const mark = phase === 2 ? series.length - 8 : null;
+      if (phase !== 2 && mainCanvas) drawCandles(mainCanvas, series, { markIndex: mark });
+    }
+    if (mainCanvas) drawCandles(mainCanvas, series);
+
+    /* ---------- 15s looping hero ---------- */
+    const caption = document.getElementById("caption");
+    const dual = document.getElementById("dual");
+    const alertBanner = document.getElementById("alertBanner");
+    const resolve = document.getElementById("resolve");
+    const progress = document.getElementById("progress");
+    const LOOP = 15000;
+    let t0 = performance.now();
+
+    function heroFrame(now) {
+      const t = (now - t0) % LOOP;
+      const p = t / LOOP;
+      progress.style.width = (p * 100) + "%";
+      document.getElementById("stageClock").textContent = fmt(new Date());
+
+      if (t < 5000) {
+        caption.textContent = "Watching the tape — is it up or down?";
+        if (filmA) filmA.classList.add("on");
+        if (mainCanvas) mainCanvas.style.display = "block";
+        dual.classList.remove("on");
+        alertBanner.classList.remove("show");
+        resolve.classList.remove("show");
+        tickCharts(1);
+      } else if (t < 10000) {
+        caption.textContent = "Nobody knows the direction. Only the WHEN.";
+        if (filmA) filmA.classList.remove("on");
+        if (mainCanvas) mainCanvas.style.display = "none";
+        dual.classList.add("on");
+        alertBanner.classList.add("show");
+        resolve.classList.add("show");
+      } else {
+        caption.textContent = "";
+        if (filmA) filmA.classList.add("on");
+        if (mainCanvas) mainCanvas.style.display = "none";
+        dual.classList.remove("on");
+        alertBanner.classList.add("show");
+      }
+      requestAnimationFrame(heroFrame);
+    }
+    requestAnimationFrame(heroFrame);
+
+    /* ---------- live event viewer ---------- */
+    const ASSETS = [
+      { asset: "BTC", tier: "MAJOR" },
+      { asset: "ETH", tier: "MID" },
+      { asset: "SOL", tier: "MINOR" },
+      { asset: "XAU", tier: "MID" },
+      { asset: "ES", tier: "MAJOR" }
+    ];
+    let evIndex = 0;
+    let windowOpen = false;
+    let nextAt = Date.now() + 8 * 60 * 1000; // first demo window ~8 min out
+
+    function scheduleNext(from) {
+      evIndex = (evIndex + 1) % ASSETS.length;
+      nextAt = from + (4 + Math.floor(Math.random() * 5)) * 60 * 1000;
+    }
+
+    const past = [];
+    function seedPast() {
+      const now = Date.now();
+      for (let i = 6; i >= 1; i--) {
+        const a = ASSETS[(evIndex + i) % ASSETS.length];
+        const when = new Date(now - i * 86 * 60 * 1000);
+        past.push({
+          called: when,
+          asset: a.asset,
+          window: `${pad(when.getHours())}:${pad(when.getMinutes())}`,
+          tier: a.tier,
+          status: "WINDOW CLOSED"
+        });
+      }
+    }
+    seedPast();
+
+    function renderTurns() {
+      const log = document.getElementById("turnLog");
+      log.innerHTML = past.slice(-6).reverse().map(r => `
+        <div class="turn-row">
+          <span class="mono">${r.asset} · ${r.window}</span>
+          <span class="dot-ok">${r.tier}</span>
+        </div>`).join("");
+      document.getElementById("recordBody").innerHTML = past.slice().reverse().map(r => `
+        <tr>
+          <td style="padding:8px;color:var(--muted)">${r.called.toLocaleString()}</td>
+          <td style="padding:8px">${r.asset}</td>
+          <td style="padding:8px">${r.window}</td>
+          <td style="padding:8px">${r.tier}</td>
+          <td style="padding:8px;color:var(--green)">${r.status}</td>
+        </tr>`).join("");
+    }
+    renderTurns();
+
+    function renderEvent() {
+      const a = ASSETS[evIndex];
+      const d = new Date(nextAt);
+      document.getElementById("evAsset").textContent = a.asset;
+      const tierEl = document.getElementById("evTier");
+      tierEl.textContent = a.tier;
+      tierEl.className = "tier " + a.tier;
+      document.getElementById("evTime").textContent = fmt(d);
+      const remain = nextAt - Date.now();
+      const live = document.getElementById("liveAlert");
+      if (remain > 0) {
+        windowOpen = false;
+        live.classList.remove("on");
+        const m = Math.floor(remain / 60000);
+        const s = Math.floor((remain % 60000) / 1000);
+        document.getElementById("evCount").textContent = `opens in ${pad(m)}:${pad(s)}`;
+        document.getElementById("stripText").textContent = `NEXT · ${a.asset} ${a.tier} · ${fmt(d)}`;
+      } else if (remain > -60000) {
+        if (!windowOpen) {
+          windowOpen = true;
+          past.push({
+            called: new Date(nextAt),
+            asset: a.asset,
+            window: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+            tier: a.tier,
+            status: "LIVE WINDOW"
+          });
+          renderTurns();
+        }
+        live.classList.add("on");
+        document.getElementById("evCount").textContent = "WINDOW OPEN — hedge either way";
+        document.getElementById("stripText").textContent = `EVENT LIVE · ${a.asset} · ${fmt(d)}`;
+      } else {
+        const last = past[past.length - 1];
+        if (last) last.status = "WINDOW CLOSED";
+        renderTurns();
+        scheduleNext(Date.now());
+        windowOpen = false;
+      }
+    }
+    setInterval(renderEvent, 250);
+    renderEvent();
+
+    document.querySelectorAll(".hedge").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const registered = localStorage.getItem("oracle_email");
+        const note = document.getElementById("hedgeNote");
+        if (!registered) {
+          note.textContent = "Register free first — then this hedge locks to today’s window.";
+          document.getElementById("signup").scrollIntoView({ behavior: "smooth" });
+          return;
+        }
+        note.textContent = `Side marked ${btn.dataset.side}. The ORACLE did not choose it. Window: ${document.getElementById("evAsset").textContent} @ ${document.getElementById("evTime").textContent}.`;
+      });
+    });
+
+    /* ---------- signup ---------- */
+    document.getElementById("regForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      localStorage.setItem("oracle_email", email);
+      document.getElementById("okMsg").classList.add("on");
+      document.getElementById("hedgeNote").textContent = "Registered. Three free events. One window per day.";
+    });
+    if (localStorage.getItem("oracle_email")) {
+      document.getElementById("okMsg").classList.add("on");
+    }
+
+    /* ---------- Tape Witness sample recon ---------- */
+    const SAMPLE_WINDOW = { asset: "BTC", hhmm: "14:00" };
+    const SAMPLE_ROWS = [
+      { minute: "13:54", oracle: "—", click: "—", tape: "QUIET", verdict: "MATCH" },
+      { minute: "13:55", oracle: "—", click: "—", tape: "QUIET", verdict: "MATCH" },
+      { minute: "13:56", oracle: "—", click: "—", tape: "QUIET", verdict: "MATCH" },
+      { minute: "13:57", oracle: "—", click: "—", tape: "QUIET", verdict: "MATCH" },
+      { minute: "13:58", oracle: "—", click: "—", tape: "QUIET", verdict: "MATCH" },
+      { minute: "13:59", oracle: "armed", click: "—", tape: "QUIET", verdict: "MATCH" },
+      { minute: "14:00", oracle: "WINDOW · BTC MAJOR", click: "BUY BTC", tape: "ACTION", verdict: "IN WINDOW" },
+      { minute: "14:01", oracle: "—", click: "—", tape: "QUIET", verdict: "MATCH" },
+      { minute: "14:02", oracle: "—", click: "—", tape: "QUIET", verdict: "MATCH" },
+      { minute: "14:03", oracle: "—", click: "—", tape: "QUIET", verdict: "MATCH" },
+      { minute: "14:04", oracle: "—", click: "—", tape: "QUIET", verdict: "MATCH" },
+      { minute: "14:05", oracle: "—", click: "—", tape: "QUIET", verdict: "MATCH" },
+      { minute: "14:18", oracle: "—", click: "SELL BTC", tape: "ACTION", verdict: "OUTSIDE" }
+    ];
+
+    function badgeTape(t) {
+      return t === "ACTION" ? '<span class="badge action">ACTION</span>' : '<span class="badge quiet">QUIET</span>';
+    }
+    function badgeVerdict(v) {
+      if (v === "IN WINDOW") return '<span class="badge match">IN WINDOW</span>';
+      if (v === "OUTSIDE") return '<span class="badge flag">OUTSIDE</span>';
+      return '<span class="badge match">MATCH</span>';
+    }
+    function scoreRows(rows) {
+      const quiet = rows.filter(r => r.tape === "QUIET" && r.verdict === "MATCH").length;
+      const inside = rows.filter(r => r.verdict === "IN WINDOW").length;
+      const outside = rows.filter(r => r.verdict === "OUTSIDE").length;
+      const clicks = inside + outside;
+      const ratio = clicks ? Math.round((inside / clicks) * 100) + "%" : "—";
+      document.getElementById("twQuiet").textContent = quiet;
+      document.getElementById("twIn").textContent = inside;
+      document.getElementById("twOut").textContent = outside;
+      document.getElementById("twScore").textContent = ratio;
+    }
+    function renderRecon(rows) {
+      const body = document.querySelector("#reconTable tbody");
+      body.innerHTML = rows.map(r => `
+        <tr>
+          <td class="mono">${r.minute}</td>
+          <td>${r.oracle}</td>
+          <td class="mono">${r.click}</td>
+          <td>${badgeTape(r.tape)}</td>
+          <td>${badgeVerdict(r.verdict)}</td>
+        </tr>`).join("");
+      scoreRows(rows);
+    }
+    renderRecon(SAMPLE_ROWS);
+
+    function parseHHMM(raw) {
+      const m = String(raw).trim().match(/(\d{1,2}):(\d{2})/);
+      if (!m) return null;
+      return `${pad(+m[1])}:${m[2]}`;
+    }
+    function reconcileCSV(text) {
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const clicks = [];
+      lines.forEach(line => {
+        if (/^time[,;]/i.test(line)) return;
+        const parts = line.split(/[,;\t]/).map(s => s.trim());
+        const minute = parseHHMM(parts[0]);
+        if (!minute) return;
+        const side = (parts[1] || "CLICK").toUpperCase();
+        const sym = (parts[2] || SAMPLE_WINDOW.asset).toUpperCase();
+        clicks.push({ minute, side, sym });
+      });
+      if (!clicks.length) return null;
+      const minutes = new Set(SAMPLE_ROWS.map(r => r.minute));
+      clicks.forEach(c => minutes.add(c.minute));
+      const ordered = [...minutes].sort();
+      return ordered.map(minute => {
+        const click = clicks.find(c => c.minute === minute);
+        const inWindow = minute === SAMPLE_WINDOW.hhmm;
+        if (click) {
+          return {
+            minute,
+            oracle: inWindow ? "WINDOW · BTC MAJOR" : "—",
+            click: `${click.side} ${click.sym}`,
+            tape: "ACTION",
+            verdict: inWindow ? "IN WINDOW" : "OUTSIDE"
+          };
+        }
+        return {
+          minute,
+          oracle: inWindow ? "WINDOW · BTC MAJOR" : (minute === "13:59" ? "armed" : "—"),
+          click: "—",
+          tape: "QUIET",
+          verdict: "MATCH"
+        };
+      });
+    }
+
+    const drop = document.getElementById("dropZone");
+    const input = document.getElementById("csvInput");
+    const status = document.getElementById("csvStatus");
+    function loadText(text, name) {
+      const rows = reconcileCSV(text);
+      if (!rows) {
+        status.textContent = "Could not read timestamps. Use time,side,symbol.";
+        return;
+      }
+      renderRecon(rows);
+      status.textContent = `Loaded ${name || "export"} · reconciled against BTC window 14:00.`;
+    }
+    drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("hot"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("hot"));
+    drop.addEventListener("drop", e => {
+      e.preventDefault();
+      drop.classList.remove("hot");
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      file.text().then(t => loadText(t, file.name));
+    });
+    input.addEventListener("change", () => {
+      const file = input.files[0];
+      if (!file) return;
+      file.text().then(t => loadText(t, file.name));
+    });
+
+    /* ---------- Trade Witness session log ---------- */
+    const LIVE_SESSION = [{"t":"2026-08-24 11:30:05","tk":"MNQU2026","act":"BUY","qty":1,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 11:48:49","tk":"MNQU2026","act":"BUY","qty":1,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 11:49:00","tk":"MNQU2026","act":"SELL","qty":1,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 12:24:51","tk":"MNQU2026","act":"BUY","qty":3,"avg":29226.625,"filled":"2026-08-24 12:24:51","fq":"3","flag":"FILL","reason":"IN BOOK","lag":0.0,"msg":"","src":"trades"},{"t":"2026-08-24 15:33:56","tk":"MNQU2026","act":"SELL","qty":3,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 15:34:18","tk":"MNQU2026","act":"SELL","qty":3,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 15:58:55","tk":"MNQU2026","act":"BUY","qty":3,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"EXIT TIMEOUT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 15:59:05","tk":"MNQU2026","act":"BUY","qty":3,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"EXIT TIMEOUT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 16:09:01","tk":"MNQU2026","act":"SELL","qty":1,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 16:09:21","tk":"MNQU2026","act":"SELL","qty":1,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 16:09:42","tk":"MNQU2026","act":"SELL","qty":1,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 16:23:03","tk":"MNQU2026","act":"BUY","qty":3,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 16:23:23","tk":"MNQU2026","act":"BUY","qty":3,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 16:38:58","tk":"MNQU2026","act":"SELL","qty":3,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 16:39:30","tk":"MNQU2026","act":"SELL","qty":3,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 16:39:50","tk":"MNQU2026","act":"BUY","qty":3,"avg":29188.75,"filled":"2026-08-24 16:39:50","fq":"3","flag":"FILL","reason":"IN BOOK","lag":0.0,"msg":"","src":"trades"},{"t":"2026-08-24 16:40:10","tk":"MNQU2026","act":"SELL","qty":3,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"EXIT TIMEOUT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 17:45:54","tk":"MNQU2026","act":"SELL","qty":12,"avg":29121.25,"filled":"2026-08-24 17:45:54","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 17:46:14","tk":"MNQU2026","act":"SELL","qty":12,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 19:34:31","tk":"MNQU2026","act":"SELL","qty":6,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 19:35:39","tk":"MNQU2026","act":"SELL","qty":2,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 19:35:59","tk":"MNQU2026","act":"SELL","qty":2,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 19:37:01","tk":"MNQU2026","act":"SELL","qty":4,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 19:37:21","tk":"MNQU2026","act":"SELL","qty":4,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 19:37:41","tk":"MNQU2026","act":"SELL","qty":2,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 19:37:54","tk":"MNQU2026","act":"SELL","qty":4,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 19:38:14","tk":"MNQU2026","act":"SELL","qty":2,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 19:41:16","tk":"MNQU2026","act":"BUY","qty":10,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 19:42:10","tk":"MNQU2026","act":"SELL","qty":10,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-24 19:57:51","tk":"MNQU2026","act":"BUY","qty":10,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 10:37:05","tk":"MNQU2026","act":"SELL","qty":4,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 10:45:49","tk":"MNQU2026","act":"SELL","qty":4,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 10:49:27","tk":"MNQU2026","act":"SELL","qty":2,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 10:49:28","tk":"MNQU2026","act":"BUY","qty":2,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 10:49:29","tk":"MNQU2026","act":"SELL","qty":2,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 10:51:46","tk":"MNQU2026","act":"BUY","qty":10,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 10:54:59","tk":"MNQU2026","act":"SELL","qty":8,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 10:56:43","tk":"MNQU2026","act":"BUY","qty":16,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 11:00:35","tk":"MNQU2026","act":"SELL","qty":36,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 11:02:21","tk":"MNQU2026","act":"BUY","qty":18,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 14:41:16","tk":"MNQU2026","act":"SELL","qty":2,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 14:47:40","tk":"MNQU2026","act":"BUY","qty":4,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 15:00:33","tk":"MNQU2026","act":"SELL","qty":8,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 15:07:16","tk":"MNQU2026","act":"SELL","qty":2,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 15:10:15","tk":"MNQU2026","act":"SELL","qty":4,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-25 15:17:00","tk":"MNQU2026","act":"BUY","qty":4,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-08-26 16:29:37","tk":"MNQU2026","act":"SELL","qty":1,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"ENTER FAIL","lag":null,"msg":"","src":"trades"},{"t":"2026-08-26 16:32:30","tk":"MNQU2026","act":"SELL","qty":1,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"ENTER FAIL","lag":null,"msg":"","src":"trades"},{"t":"2026-08-26 16:36:21","tk":"MNQU2026","act":"SELL","qty":2,"avg":29214.5,"filled":"2026-08-26 16:36:21","fq":"2","flag":"FILL","reason":"IN BOOK","lag":0.0,"msg":"","src":"trades"},{"t":"2026-09-03 11:16:15","tk":"MGCZ2026","act":"SELL","qty":2,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-03 11:26:17","tk":"MGCZ2026","act":"BUY","qty":2,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-03 11:30:20","tk":"MGCZ2026","act":"SELL","qty":4,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-09-03 11:32:12","tk":"MGCZ2026","act":"SELL","qty":4,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-09-03 11:35:23","tk":"MGCZ2026","act":"SELL","qty":4,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-09-03 11:37:48","tk":"MGCZ2026","act":"SELL","qty":4,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-09-03 11:39:38","tk":"MGCZ2026","act":"SELL","qty":2,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-10 03:16:42","tk":"MBTU2026","act":"BUY","qty":5,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-09-10 03:18:32","tk":"MBTU2026","act":"SELL","qty":5,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-09-10 10:55:16","tk":"MBTU2026","act":"BUY","qty":4,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 10:32:25","tk":"MBTV2026","act":"SELL","qty":1,"avg":null,"filled":"","fq":null,"flag":"REJECT","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 15:05:18","tk":"MBTV2026","act":"SELL","qty":5,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 15:08:18","tk":"MBTV2026","act":"BUY","qty":10,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 15:16:19","tk":"MBTV2026","act":"SELL","qty":10,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 15:21:15","tk":"MBTV2026","act":"BUY","qty":5,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 15:29:16","tk":"MBTV2026","act":"SELL","qty":5,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 15:39:19","tk":"MBTV2026","act":"BUY","qty":1,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 15:44:19","tk":"MBTV2026","act":"SELL","qty":1,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 15:55:20","tk":"MBTV2026","act":"BUY","qty":1,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 16:09:20","tk":"MBTV2026","act":"SELL","qty":1,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 16:14:18","tk":"MBTV2026","act":"SELL","qty":5,"avg":null,"filled":"","fq":null,"flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 16:53:18","tk":"MBTV2026","act":"BUY","qty":5,"avg":84230,"filled":"2026-09-25 16:53:18","fq":"5","flag":"FILL","reason":"IN BOOK","lag":0.0,"msg":"","src":"trades"},{"t":"2026-09-25 17:11:19","tk":"MBTV2026","act":"SELL","qty":5,"avg":84300,"filled":"2026-09-25 17:11:19","fq":"5","flag":"FILL","reason":"IN BOOK","lag":0.0,"msg":"","src":"trades"},{"t":"2026-09-25 17:24:21","tk":"MBTV2026","act":"SELL","qty":5,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 17:26:19","tk":"MBTV2026","act":"BUY","qty":5,"avg":84275,"filled":"2026-09-25 17:26:20","fq":"5","flag":"FILL","reason":"IN BOOK","lag":1.0,"msg":"","src":"trades"},{"t":"2026-09-25 17:31:22","tk":"MBTV2026","act":"SELL","qty":5,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 17:36:55","tk":"MBTV2026","act":"BUY","qty":8,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 17:39:00","tk":"MBTV2026","act":"BUY","qty":8,"avg":null,"filled":"","fq":"0","flag":"GHOST","reason":"LIQUIDITY","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 17:39:53","tk":"MBTV2026","act":"BUY","qty":6,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 17:54:00","tk":"MBTV2026","act":"SELL","qty":6,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 18:03:21","tk":"MBTV2026","act":"BUY","qty":6,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 18:19:04","tk":"MBTV2026","act":"SELL","qty":6,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 18:38:00","tk":"MBTV2026","act":"BUY","qty":6,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 18:45:00","tk":"MBTV2026","act":"SELL","qty":6,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 19:04:00","tk":"MBTV2026","act":"BUY","qty":6,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 19:09:00","tk":"MBTV2026","act":"SELL","qty":6,"avg":null,"filled":"","fq":"0","flag":"SIGNAL","reason":"NO FILL IN EXPORT","lag":null,"msg":"","src":"trades"},{"t":"2026-09-25 17:00:01","tk":"MBTV2026","act":"SELL","qty":"5","avg":"84140","filled":"2026-09-25 17:00:03","fq":"5","flag":"FILL","reason":"ORDERS FILE","lag":2.0,"msg":"","src":"orders"}];
+
+    function flagBadge(f) {
+      if (f === "FILL") return '<span class="badge match">FILL</span>';
+      if (f === "SIGNAL") return '<span class="badge quiet">SIGNAL</span>';
+      if (f === "REJECT") return '<span class="badge action">REJECT</span>';
+      return '<span class="badge flag">' + f + "</span>";
+    }
+    function scoreLive(rows) {
+      const fills = rows.filter(r => r.flag === "FILL");
+      const ghosts = rows.filter(r => r.flag === "GHOST");
+      const signals = rows.filter(r => r.flag === "SIGNAL");
+      const lags = fills.map(r => r.lag).filter(v => v != null);
+      document.getElementById("trFills").textContent = fills.length;
+      document.getElementById("trIn").textContent = signals.length;
+      document.getElementById("trFlag").textContent = ghosts.length;
+      document.getElementById("trLag").textContent = lags.length ? Math.min(...lags).toFixed(1) + "s" : "—";
+    }
+    function renderLive(rows) {
+      const sorted = rows.slice().sort((a,b) => String(a.t).localeCompare(String(b.t)));
+      document.querySelector("#tradeTable tbody").innerHTML = sorted.map(r => {
+        const fill = r.flag === "FILL"
+          ? `${r.fq || r.qty} @ ${r.avg ?? "—"}`
+          : (r.reason || "—");
+        const lag = r.lag == null ? "—" : r.lag + "s";
+        const tip = r.msg ? ` title="${r.msg.replace(/"/g,"&quot;")}"` : "";
+        return `<tr${tip}>
+          <td class="mono">${r.t}</td>
+          <td class="mono">${r.tk}</td>
+          <td class="mono">${r.act || "—"} · ${r.qty ?? "—"}</td>
+          <td>${fill}</td>
+          <td class="mono">${lag}</td>
+          <td>${flagBadge(r.flag)}</td>
+        </tr>`;
+      }).join("");
+      scoreLive(rows);
+    }
+    let liveFilter = "ALL";
+    function applyLiveFilter() {
+      const rows = liveFilter === "ALL" ? LIVE_SESSION : LIVE_SESSION.filter(r => r.flag === liveFilter);
+      renderLive(rows);
+    }
+    applyLiveFilter();
+    document.querySelectorAll(".twf").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".twf").forEach(b => b.classList.remove("on"));
+        btn.classList.add("on");
+        liveFilter = btn.dataset.f;
+        applyLiveFilter();
+      });
+    });
+
+    function parseTradersPostTrades(text) {
+      if (!text.includes("Signal Payload") && !text.includes("Ticker Name")) return null;
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      if (lines.length < 2) return null;
+      // naive CSV split will break on JSON; use a minimal parser for first few cols
+      const rows = [];
+      const re = /^([^,]*),([^,]*),([^,]*),([^,]*),([^,]*),([^,]*),([^,]*),/;
+      // fallback: treat as simple fills if parse fails
+      return null;
+    }
+    function parseFills(text) {
+      if (text.includes("Ticker Name") && text.includes("Trade Result")) {
+        document.getElementById("fillStatus").textContent = "TradersPost trades export detected. This page already has the parsed broker session loaded. Drop a simple fill CSV to overlay.";
+        return LIVE_SESSION;
+      }
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const rows = [];
+      lines.forEach(line => {
+        if (/^time[,;]/i.test(line) || /^UUID/i.test(line) || /^Order ID/i.test(line)) return;
+        const p = line.split(/[,;\t]/).map(s => s.trim());
+        const tm = p[0];
+        if (!/\d{1,2}:\d{2}/.test(tm) && !/\d{4}-\d{2}-\d{2}/.test(tm)) return;
+        const filled = /\d{4}-\d{2}-\d{2}/.test(p[5]||"") ? p[5] : "";
+        rows.push({
+          t: tm.length <= 8 && /^\d/.test(tm) ? "2026-01-01 " + (tm.length===5?tm+":00":tm) : tm.slice(0,19),
+          tk: p[4] || p[2] || "—",
+          act: (p[1] || "FILL").toUpperCase(),
+          qty: p[2] || "—",
+          avg: p[3] || "—",
+          filled: filled.slice(0,19),
+          fq: p[2] || "—",
+          flag: filled || p[3] ? "FILL" : "SIGNAL",
+          reason: filled ? "IN BOOK" : "NO FILL IN EXPORT",
+          lag: null,
+          msg: "",
+          src: "upload"
+        });
+      });
+      return rows.length ? rows : null;
+    }
+
+    const fillDrop = document.getElementById("fillDrop");
+    const fillInput = document.getElementById("fillInput");
+    const fillStatus = document.getElementById("fillStatus");
+    function loadFills(text, name) {
+      const rows = parseFills(text);
+      if (!rows) {
+        fillStatus.textContent = "Could not read fills. Use time,side,size,price,symbol — or keep the loaded Tradovate session.";
+        return;
+      }
+      renderLive(rows);
+      fillStatus.textContent = `Loaded ${name || "fills"} · ${rows.length} rows.`;
+    }
+    fillDrop.addEventListener("dragover", e => { e.preventDefault(); fillDrop.classList.add("hot"); });
+    fillDrop.addEventListener("dragleave", () => fillDrop.classList.remove("hot"));
+    fillDrop.addEventListener("drop", e => {
+      e.preventDefault();
+      fillDrop.classList.remove("hot");
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      file.text().then(t => loadFills(t, file.name));
+    });
+    fillInput.addEventListener("change", () => {
+      const file = fillInput.files[0];
+      if (!file) return;
+      file.text().then(t => loadFills(t, file.name));
+    });
+
+    /* ---------- share ---------- */
+    const shareText = "ORACLE SYSTEM sells timing — not direction, not price. The WHEN. No more FOMO.";
+    document.querySelectorAll("[data-share]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const url = encodeURIComponent(location.href);
+        const text = encodeURIComponent(shareText);
+        const map = {
+          x: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+          facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+          reddit: `https://www.reddit.com/submit?url=${url}&title=${text}`,
+          whatsapp: `https://wa.me/?text=${text}%20${url}`,
+          telegram: `https://t.me/share/url?url=${url}&text=${text}`,
+          linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+          email: `mailto:?subject=${encodeURIComponent("ORACLE SYSTEM — the WHEN")}&body=${text}%20${url}`
+        };
+        window.open(map[btn.dataset.share], "_blank", "noopener,width=640,height=560");
+      });
+    });
+
+    /* ---- AMARTIE SCENE CYCLE (background video effect) ---- */
+    const amartieScenes = [
+      "static/img/amartie-scene-4.png",
+      "static/img/amartie-scene-3.png",
+      "static/img/amartie-scene-2.png",
+      "static/img/amartie-scene-1.png",
+      "static/img/amartie-scene-0.png"
+    ];
+    let amartieIdx = 0;
+    const bgAmartie = document.getElementById("bgAmartie");
+    if (bgAmartie) {
+      bgAmartie.style.backgroundImage = `url("${amartieScenes[0]}")`;
+      bgAmartie.style.backgroundSize = "cover";
+      bgAmartie.style.backgroundPosition = "center";
+      setInterval(() => {
+        amartieIdx = (amartieIdx + 1) % amartieScenes.length;
+        bgAmartie.style.opacity = "0";
+        setTimeout(() => {
+          bgAmartie.style.backgroundImage = `url("${amartieScenes[amartieIdx]}")`;
+          bgAmartie.style.opacity = "0.35";
+        }, 2000);
+      }, 8000);
+    }
+  </script>
+</body>
+</html>
