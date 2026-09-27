@@ -64,14 +64,13 @@ def generate_token(user_id: str) -> str:
 
 
 def get_user_token(user_id: str) -> str:
-    """Get or create a canary token for a user."""
+    """Get or create a canary token for a user. Always creates fresh."""
+    init_canary_db()
     conn = get_db()
-    row = conn.execute(
-        "SELECT token FROM canary_tokens WHERE user_id = ?", (user_id,)
-    ).fetchone()
+    # Delete any old token for this user (always create fresh)
+    conn.execute("DELETE FROM canary_tokens WHERE user_id = ?", (user_id,))
+    conn.commit()
     conn.close()
-    if row:
-        return row["token"]
     return generate_token(user_id)
 
 

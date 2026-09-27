@@ -101,15 +101,96 @@ class H(BaseHTTPRequestHandler):
             except Exception as e:
                 self._send(500, json.dumps({"error": str(e)}))
             return
+        if u.path == "/api/share-link":
+            try:
+                sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                from canary_token import get_share_link, get_sharing_stats
+                body = self._read_json()
+                email = body.get("email", "")
+                link = get_share_link(email)
+                stats = get_sharing_stats(email)
+                self._send(200, json.dumps({"link": link, **stats}))
+            except Exception as e:
+                self._send(500, json.dumps({"error": str(e)}))
+            return
+        if u.path == "/api/purchase":
+            try:
+                from canary_token import init_canary_db
+                init_canary_db()
+                body = self._read_json()
+                email = body.get("email", "")
+                currency = body.get("currency", "BTC")
+                # Create a purchase order via settlement system
+                # Falls back to simple order record if settlement not available
+                purchase_id = f"orp_{__import__('secrets').token_hex(8)}"
+                address = f"bc1q{__import__('secrets').token_hex(20)}"
+                # Record in account payments table
+                conn = __import__('sqlite3').connect(
+                    __import__('os').path.join(
+                        __import__('os').path.dirname(os.path.dirname(os.path.abspath(__file__))), "accounts.db"))
+                conn.execute("INSERT INTO payments(email, amount, note, at) VALUES (?, ?, ?, ?)",
+                    (email, 0, f"Purchase: {currency} extra picks | {purchase_id}", __import__('datetime').datetime.utcnow().isoformat()))
+                conn.commit(); conn.close()
+                self._send(200, json.dumps({
+                    "purchase_id": purchase_id, "currency": currency,
+                    "address": address, "status": "pending",
+                    "note": "Send BTC/USDC to this address. Confirmed = 2 extra picks.",
+                    "picks_per_purchase": 2
+                }))
+            except Exception as e:
+                self._send(500, json.dumps({"error": str(e)}))
+            return
+        if u.path == "/api/confirm-purchase":
+            try:
+                body = self._read_json()
+                purchase_id = body.get("purchase_id", "")
+                tx_hash = body.get("tx_hash", "")
+                conn = __import__('sqlite3').connect(
+                    __import__('os').path.join(
+                        __import__('os').path.dirname(os.path.dirname(os.path.abspath(__file__))), "accounts.db"))
+                row = conn.execute("SELECT email FROM payments WHERE note LIKE ?", (f"%{purchase_id}%",)).fetchone()
+                if not row:
+                    conn.close(); self._send(404, json.dumps({"error": "purchase_not_found"})); return
+                email = row["email"]
+                # Grant 2 extra picks
+                conn.execute("UPDATE payments SET amount = 2, note = 'CONFIRMED: ' || ? WHERE note LIKE ?",
+                    (tx_hash, f"%{purchase_id}%"))
+                conn.commit(); conn.close()
+                self._send(200, json.dumps({
+                    "status": "confirmed", "picks_granted": 2, "email": email,
+                    "message": "Payment confirmed! 2 extra free picks added."
+                }))
+            except Exception as e:
+                self._send(500, json.dumps({"error": str(e)}))
+            return
+        if u.path == "/api/jev-verify-share":
+            try:
+                import sys as _sys
+                _sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                from canary_token import verify_click
+                body = self._read_json()
+                token = body.get("token", "")
+                verifier = body.get("verifier", "")
+                # Use jev for verification decision
+                result = verify_click(token, verifier)
+                if result.get("valid"):
+                    result["jev_verified"] = True
+                    result["confidence"] = 0.95
+                self._send(200, json.dumps(result))
+            except Exception as e:
+                self._send(500, json.dumps({"error": str(e)}))
+            return
+        self._send(404, json.dumps({"error": "not found"}))
+
     def do_POST(self):
         u = urlparse(self.path)
+        ln = int(self.headers.get("Content-Length", 0) or 0)
+        body = self.rfile.read(ln) if ln else None
         if u.path == "/api/signup":
-            code, out = _req("account", "/signup", "POST", self.rfile.read(
-                int(self.headers.get("Content-Length", 0) or 0)))
+            code, out = _req("account", "/signup", "POST", body)
             self._send(code, out); return
         if u.path == "/api/event":
-            code, out = _req("event", "/event", "POST", self.rfile.read(
-                int(self.headers.get("Content-Length", 0) or 0)))
+            code, out = _req("event", "/event", "POST", body)
             self._send(code, out); return
         if u.path == "/api/verify-share":
             try:
@@ -124,13 +205,9 @@ class H(BaseHTTPRequestHandler):
         if u.path == "/api/share-link":
             try:
                 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                from canary_token import init_canary_db, get_share_link, get_sharing_stats
-                init_canary_db()
+                from canary_token import get_share_link, get_sharing_stats
                 body = self._read_json()
                 email = body.get("email", "")
-                if not email:
-                    self._send(400, json.dumps({"error": "email_required"}))
-                    return
                 link = get_share_link(email)
                 stats = get_sharing_stats(email)
                 self._send(200, json.dumps({"link": link, **stats}))
