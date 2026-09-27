@@ -1,0 +1,6 @@
+__pycache__/
+*.db
+*.pyc
+node_modules/
+static/video/*.mp4
+!static/video/.gitkeep
