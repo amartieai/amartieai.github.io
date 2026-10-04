@@ -1,0 +1,190 @@
+/* ============================================================
+   COCKPIT ART PASS — overlay styling layer
+   Loaded AFTER the main <style> block. Pure CSS override,
+   no structural changes. Scenes are driven by body[data-scene].
+   Scenes: bridge (default) | kitchen | jungle | beach
+   Design law: glow discipline — ONE accent glow per element,
+   ambient light only from the scene backdrop.
+   ============================================================ */
+
+/* ---------- typography: premium pass ---------- */
+body {
+  font-size: 13px;
+  letter-spacing: .012em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+h1 {
+  font-size: 17px;
+  letter-spacing: .12em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+h1 .pill { vertical-align: 3px; }
+.card h2 {
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  font-weight: 700;
+}
+.node-name, .plugin-row .p-name { letter-spacing: .02em; }
+th { letter-spacing: .1em; }
+code { letter-spacing: 0; }
+:root {
+  --font: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --mono: "JetBrains Mono", "SFMono-Regular", "Cascadia Code", Consolas, Menlo, monospace;
+}
+
+/* ---------- glow discipline: calm the noise ---------- */
+.logo { animation: none; }
+.dot.ok   { animation: none; box-shadow: 0 0 5px var(--ok); }
+.dot.warn { animation: none; box-shadow: 0 0 5px var(--warn); }
+.dot.bad  { box-shadow: 0 0 5px var(--bad); }
+@keyframes dot-pulse { 0%,100%{opacity:1;} 50%{opacity:.75;} }
+.dot.ok, .dot.warn { animation: dot-pulse 3.2s ease-in-out infinite; }
+.card {
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.45);
+}
+.card:hover {
+  border-color: rgba(76,201,255,.28);
+  box-shadow: 0 8px 28px rgba(0,0,0,.55), 0 0 1px rgba(76,201,255,.2);
+}
+.mem-node .core { box-shadow: 0 0 10px rgba(76,201,255,.8), 0 0 26px rgba(76,201,255,.3); }
+.orch-name { text-shadow: 0 0 10px rgba(255,209,102,.35); }
+
+/* ---------- scene switcher ---------- */
+.scene-switch {
+  display: flex; align-items: center; gap: 4px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 3px;
+}
+.scene-switch .sc-label {
+  font-size: 9px; letter-spacing: .14em; color: var(--muted);
+  padding: 0 6px 0 4px; text-transform: uppercase;
+}
+.scene-btn {
+  border: 1px solid transparent; background: transparent;
+  color: var(--muted); font-size: 13px; line-height: 1;
+  padding: 3px 8px; border-radius: 5px; cursor: pointer;
+  transition: color .15s ease, background .15s ease, border-color .15s ease;
+}
+.scene-btn:hover { color: var(--text); background: var(--panel-3); }
+.scene-btn.active {
+  color: var(--scene-accent, #4cc9ff);
+  background: color-mix(in srgb, var(--scene-accent, #4cc9ff) 12%, transparent);
+  border-color: color-mix(in srgb, var(--scene-accent, #4cc9ff) 45%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--scene-accent, #4cc9ff) 25%, transparent);
+}
+
+/* scene transition — one soft cross-fade of the backdrop */
+body { transition: background 1.2s ease; }
+.nebula-bg { transition: filter 1.2s ease; }
+
+/* ============================================================
+   SCENE 1 — BRIDGE (default): deep space, command blue + gold
+   ============================================================ */
+body[data-scene="bridge"], body:not([data-scene]) {
+  --scene-accent: #4cc9ff;
+  background: #050810;
+}
+body[data-scene="bridge"] .nebula-bg, body:not([data-scene]) .nebula-bg {
+  background:
+    radial-gradient(ellipse 900px 500px at 25% 8%, rgba(30,80,180,.30), transparent 55%),
+    radial-gradient(ellipse 700px 450px at 72% 4%, rgba(130,40,180,.22), transparent 50%),
+    radial-gradient(ellipse 500px 350px at 48% 78%, rgba(15,50,110,.25), transparent 45%),
+    radial-gradient(ellipse 400px 250px at 85% 65%, rgba(76,201,255,.08), transparent 50%),
+    radial-gradient(ellipse 350px 200px at 10% 50%, rgba(255,209,102,.06), transparent 50%),
+    linear-gradient(180deg, #040710 0%, #050810 35%, #040812 100%);
+}
+
+/* ============================================================
+   SCENE 2 — KITCHEN: warm copper, stainless, mise-en-place
+   ============================================================ */
+body[data-scene="kitchen"] {
+  --scene-accent: #ff9e5e;
+  --accent: #ff9e5e;
+  --gold: #ffd9a0;
+  --ok: #7ddb8a;
+  --panel-2: #201916;
+  --panel-3: #2a211c;
+  --border: #3a2d24;
+  background: #100a06;
+}
+body[data-scene="kitchen"] .nebula-bg {
+  background:
+    radial-gradient(ellipse 800px 480px at 30% 5%, rgba(200,90,30,.26), transparent 55%),
+    radial-gradient(ellipse 600px 400px at 75% 10%, rgba(255,158,94,.14), transparent 50%),
+    radial-gradient(ellipse 500px 320px at 50% 85%, rgba(140,60,20,.20), transparent 45%),
+    radial-gradient(ellipse 380px 240px at 88% 60%, rgba(255,200,120,.07), transparent 50%),
+    radial-gradient(ellipse 300px 200px at 8% 55%, rgba(255,217,160,.05), transparent 50%),
+    linear-gradient(180deg, #0d0703 0%, #100a06 40%, #0f0905 100%);
+  animation: none;
+}
+body[data-scene="kitchen"] .logo {
+  background: linear-gradient(135deg, #ff9e5e, #ffd9a0);
+  box-shadow: 0 0 12px rgba(255,158,94,.3);
+}
+body[data-scene="kitchen"] h1 { color: var(--gold); }
+
+/* ============================================================
+   SCENE 3 — JUNGLE: bioluminescent canopy, deep greens
+   ============================================================ */
+body[data-scene="jungle"] {
+  --scene-accent: #6ee7a0;
+  --accent: #6ee7a0;
+  --gold: #d4e157;
+  --ok: #6ee7a0;
+  --panel-2: #0e1a14;
+  --panel-3: #14241b;
+  --border: #1f3527;
+  background: #030805;
+}
+body[data-scene="jungle"] .nebula-bg {
+  background:
+    radial-gradient(ellipse 850px 500px at 20% 10%, rgba(20,120,70,.28), transparent 55%),
+    radial-gradient(ellipse 650px 420px at 78% 6%, rgba(110,231,160,.12), transparent 50%),
+    radial-gradient(ellipse 500px 340px at 45% 88%, rgba(10,80,50,.26), transparent 48%),
+    radial-gradient(ellipse 360px 240px at 90% 62%, rgba(212,225,87,.06), transparent 50%),
+    radial-gradient(ellipse 320px 200px at 6% 50%, rgba(110,231,160,.05), transparent 50%),
+    linear-gradient(180deg, #020604 0%, #030805 45%, #020703 100%);
+  animation: none;
+}
+body[data-scene="jungle"] .logo {
+  background: linear-gradient(135deg, #6ee7a0, #d4e157);
+  box-shadow: 0 0 12px rgba(110,231,160,.3);
+}
+body[data-scene="jungle"] h1 { color: var(--gold); }
+
+/* ============================================================
+   SCENE 4 — BEACH: dusk horizon, coral + turquoise surf
+   ============================================================ */
+body[data-scene="beach"] {
+  --scene-accent: #5ad1c8;
+  --accent: #5ad1c8;
+  --gold: #ffc4a3;
+  --ok: #5ad1c8;
+  --panel-2: #101a1f;
+  --panel-3: #16232a;
+  --border: #22333c;
+  background: #060d11;
+}
+body[data-scene="beach"] .nebula-bg {
+  background:
+    radial-gradient(ellipse 900px 520px at 50% -5%, rgba(255,110,90,.20), transparent 55%),
+    radial-gradient(ellipse 700px 440px at 22% 8%, rgba(90,209,200,.14), transparent 50%),
+    radial-gradient(ellipse 600px 380px at 80% 82%, rgba(30,110,130,.24), transparent 48%),
+    radial-gradient(ellipse 380px 240px at 92% 55%, rgba(255,196,163,.07), transparent 50%),
+    radial-gradient(ellipse 320px 200px at 5% 60%, rgba(255,150,120,.05), transparent 50%),
+    linear-gradient(180deg, #0a0a10 0%, #061015 40%, #060d11 100%);
+  animation: none;
+}
+body[data-scene="beach"] .logo {
+  background: linear-gradient(135deg, #5ad1c8, #ffc4a3);
+  box-shadow: 0 0 12px rgba(90,209,200,.3);
+}
+body[data-scene="beach"] h1 { color: var(--gold); }
+
+/* ---------- scene: keep live-status colors readable on all scenes ---------- */
+body[data-scene="kitchen"] .dot.ok,
+body[data-scene="jungle"] .dot.ok,
+body[data-scene="beach"] .dot.ok { background: var(--ok); box-shadow: 0 0 5px var(--ok); }

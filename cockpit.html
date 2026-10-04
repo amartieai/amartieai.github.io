@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cockpit</title>
+<style>
+  :root {
+    --bg: #07090d;
+    --panel: #0e1117;
+    --panel-2: #141922;
+    --panel-3: #1b2230;
+    --text: #e6e9f0;
+    --muted: #7d879c;
+    --ok: #2ee6a8;
+    --warn: #f5c451;
+    --bad: #ff5d5d;
+    --accent: #4cc9ff;
+    --gold: #ffd166;
+    --border: #1f2733;
+    --font: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: #050810;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.4;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* animated nebula canvas — the living background */
+  .nebula-bg {
+    position: fixed; inset: 0; z-index: -2; pointer-events: none;
+    background:
+      radial-gradient(ellipse 900px 500px at 25% 8%, rgba(30,80,180,.30), transparent 55%),
+      radial-gradient(ellipse 700px 450px at 72% 4%, rgba(130,40,180,.22), transparent 50%),
+      radial-gradient(ellipse 500px 350px at 48% 78%, rgba(15,50,110,.25), transparent 45%),
+      radial-gradient(ellipse 400px 250px at 85% 65%, rgba(76,201,255,.08), transparent 50%),
+      radial-gradient(ellipse 350px 200px at 10% 50%, rgba(255,209,102,.06), transparent 50%),
+      linear-gradient(180deg, #040710 0%, #050810 35%, #040812 100%);
+    animation: nebula-shift 25s ease-in-out infinite alternate;
+  }
+  @keyframes nebula-shift {
+    0%   { filter: brightness(1) hue-rotate(0deg); }
+    50%  { filter: brightness(1.08) hue-rotate(4deg); }
+    100% { filter: brightness(0.95) hue-rotate(-3deg); }
+  }
+  /* scan line overlay — subtle CRT feel */
+  .scanlines {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px
+    );
+  }
+  .wrap { width: 100%; margin: 0; padding: 10px 14px 40px; }
+
+  /* ---------- header ---------- */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px;
+    padding: 8px 2px 10px;
+    border-bottom: 1px solid rgba(76,201,255,.15);
+    margin-bottom: 10px;
+  }
+  .hdr-lights { flex: 1; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .hdr-lights .light { font-size: 10px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: #07090d;
+    box-shadow: 0 0 14px rgba(76,201,255,.35), 0 0 28px rgba(76,201,255,.15);
+    animation: logo-pulse 3s ease-in-out infinite;
+  }
+  @keyframes logo-pulse {
+    0%, 100% { box-shadow: 0 0 14px rgba(76,201,255,.35), 0 0 28px rgba(76,201,255,.10); }
+    50%      { box-shadow: 0 0 20px rgba(76,201,255,.55), 0 0 44px rgba(76,201,255,.20); }
+  }
+  h1 { font-size: 16px; letter-spacing: .05em; color: var(--gold); }
+  .meta { color: var(--muted); font-size: 11px; }
+  .pill {
+    display: inline-block; padding: 1px 8px; border-radius: 20px;
+    font-size: 10px; letter-spacing: .08em; font-weight: 600;
+    border: 1px solid var(--border); color: var(--muted);
+    vertical-align: 2px; margin-left: 8px;
+  }
+  .pill.live { color: var(--ok); border-color: var(--ok); box-shadow: 0 0 8px rgba(46,230,168,.25); }
+
+  /* ---------- nav ---------- */
+  .nav { display: flex; gap: 2px; margin-bottom: 10px; flex-wrap: wrap; }
+  .nav-item {
+    padding: 4px 12px; border-radius: 5px;
+    color: var(--muted); cursor: pointer; font-size: 12px;
+    border: 1px solid transparent; user-select: none;
+  }
+  .nav-item:hover { color: var(--text); background: var(--panel-2); }
+  .nav-item.active { color: var(--text); background: var(--panel-2); border-color: var(--border); }
+
+  /* ---------- system lights (compact dot row) ---------- */
+  .lights {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 4px 2px;
+  }
+  .light {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10.5px; color: var(--muted);
+  }
+  .light .lname { white-space: nowrap; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .dot.ok { background: var(--ok); box-shadow: 0 0 6px var(--ok), 0 0 12px rgba(46,230,168,.25); animation: dot-pulse 2.5s ease-in-out infinite; }
+  .dot.warn { background: var(--warn); box-shadow: 0 0 6px var(--warn), 0 0 12px rgba(245,196,81,.25); animation: dot-pulse 1.8s ease-in-out infinite; }
+  .dot.bad { background: var(--bad); box-shadow: 0 0 6px var(--bad), 0 0 12px rgba(255,93,93,.25); animation: dot-pulse 1.2s ease-in-out infinite; }
+  @keyframes dot-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: .6; }
+  }
+
+  /* ---------- grid ---------- */
+  .grid { display: grid; gap: 10px; }
+  .two { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+
+  .card {
+    background: rgba(14,17,23,.80); border: 1px solid rgba(76,201,255,.12);
+    border-radius: 8px; padding: 10px 12px; min-width: 0;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    box-shadow: 0 4px 16px rgba(0,0,0,.4), 0 0 12px rgba(76,201,255,.04);
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .card h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--accent); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .card h2 .count { color: var(--muted); font-weight: 400; }
+
+  .node-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .node-card {
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 9px;
+  }
+  .node-card.active { border-color: var(--ok); background: linear-gradient(180deg, rgba(46,230,168,.06), transparent), var(--panel-2); }
+  .node-name { font-weight: 600; font-size: 12.5px; display: flex; align-items: center; gap: 6px; }
+  .node-meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
+  .node-tag {
+    display: inline-block; font-size: 9.5px; padding: 0 5px; border-radius: 3px;
+    background: var(--panel-3); color: var(--muted); border: 1px solid var(--border);
+    margin-left: 4px; letter-spacing: .04em;
+  }
+  .node-tag.run { color: var(--ok); border-color: rgba(46,230,168,.4); }
+
+  /* ---------- table ---------- */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; padding: 4px 7px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; }
+  tr:hover td { background: var(--panel-2); }
+
+  /* ---------- feed ---------- */
+  .feed {
+    font-family: var(--mono); font-size: 11.5px;
+    background: #0a0d12; border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; max-height: 300px; overflow: auto; color: var(--text);
+  }
+  .feed .t { color: var(--muted); }
+  .feed .ok { color: var(--ok); }
+  .feed .warn { color: var(--warn); }
+  .feed .bad { color: var(--bad); }
+  .feed .gold { color: var(--gold); }
+  .feed .dim { color: var(--muted); }
+
+  /* ---------- misc ---------- */
+  .prewrap {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    background: var(--panel-2); padding: 8px; border-radius: 6px;
+    max-height: 220px; overflow: auto; white-space: pre-wrap; word-break: break-word;
+  }
+  .empty { color: var(--muted); font-style: italic; font-size: 12px; }
+  .error { background: rgba(255,93,93,.12); border: 1px solid var(--bad); color: #ffb3b3; padding: 6px 12px; font-size: 12px; border-radius: 6px; display: none; margin-bottom: 10px; }
+  .error.visible { display: block; }
+  .grid-full { grid-column: 1 / -1; }
+  code { font-size: 11px; background: var(--panel-3); padding: 0 4px; border-radius: 3px; font-family: var(--mono); }
+  .sub { color: var(--muted); font-size: 11px; }
+  .footer { margin-top: 14px; color: var(--muted); font-size: 10.5px; text-align: center; }
+
+  /* ---------- conversation ---------- */
+  .orch-name {
+    font-size: 19px; font-weight: 800; letter-spacing: .03em;
+    color: var(--gold); text-shadow: 0 0 14px rgba(255,209,102,.45);
+  }
+  .convo {
+    font-family: var(--mono); font-size: 12px;
+    background: #0a0d12; border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; max-height: 260px; min-height: 140px; overflow: auto;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .convo-msg { padding: 5px 9px; border-radius: 6px; max-width: 85%; }
+  .convo-msg b { color: var(--gold); font-weight: 600; }
+  .convo-msg.you { background: var(--panel-3); align-self: flex-start; }
+  .convo-msg.hermes { background: rgba(76,201,255,.08); border: 1px solid rgba(76,201,255,.25); align-self: flex-end; }
+  .convo-msg.hermes b { color: var(--accent); }
+  .convo-input {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 8px; padding: 6px 10px;
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px;
+    font-family: var(--mono); font-size: 12px;
+  }
+  .convo-prompt { color: var(--accent); font-weight: 700; }
+  .convo-field {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: var(--mono); font-size: 12.5px;
+  }
+  .convo-field::placeholder { color: var(--muted); font-style: italic; }
+  .mic-btn {
+    background: var(--panel-3); border: 1px solid var(--border);
+    border-radius: 6px; font-size: 14px; cursor: pointer;
+    padding: 2px 8px; line-height: 1.2;
+  }
+  .mic-btn:hover { border-color: var(--accent); }
+  .mic-btn.listening {
+    background: rgba(255,93,93,.18); border-color: var(--bad);
+    box-shadow: 0 0 10px rgba(255,93,93,.4);
+    animation: mic-pulse 1.2s ease infinite;
+  }
+  @keyframes mic-pulse { 0%,100% { box-shadow: 0 0 6px rgba(255,93,93,.3); } 50% { box-shadow: 0 0 16px rgba(255,93,93,.7); } }
+  .feed.collapsed { display: none; }
+
+  /* ---------- proportionate layout: two windows side by side ---------- */
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  .rail { display: flex; flex-direction: column; gap: 10px; }
+  .feed-card { display: flex; flex-direction: column; }
+  .feed-card .feed { max-height: 420px; flex: 1; }
+  .feed-hint { color: var(--muted); font-size: 10.5px; margin-top: 6px; }
+
+  /* ---------- self-explanatory: help + tour ---------- */
+  .help-btn {
+    background: var(--panel-2); color: var(--accent);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 4px 12px; font-size: 12px; cursor: pointer;
+  }
+  .help-btn:hover { border-color: var(--accent); }
+  .info-btn {
+    background: var(--panel-3); color: var(--muted);
+    border: 1px solid var(--border); border-radius: 50%;
+    width: 17px; height: 17px; font-size: 10.5px; line-height: 1;
+    cursor: pointer; margin-left: auto; flex: none;
+  }
+  .info-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .h2row { display: flex; align-items: center; gap: 6px; width: 100%; }
+  .popover {
+    display: none;
+    background: var(--panel-3); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 10px 12px; font-size: 12px;
+    color: var(--text); margin-top: 8px; line-height: 1.5;
+    box-shadow: 0 6px 24px rgba(0,0,0,.5);
+  }
+  .popover.show { display: block; }
+  .popover .speak {
+    margin-top: 8px; background: var(--panel-2); color: var(--accent);
+    border: 1px solid var(--border); border-radius: 5px;
+    padding: 2px 10px; font-size: 11px; cursor: pointer;
+  }
+  .popover .speak:hover { border-color: var(--accent); }
+  .welcome {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: linear-gradient(90deg, rgba(76,201,255,.10), rgba(255,209,102,.06));
+    border: 1px solid rgba(76,201,255,.35); border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 10px;
+  }
+  .welcome .wtxt { font-size: 12.5px; color: var(--text); }
+  .welcome .wtxt b { color: var(--gold); }
+  .tour-highlight { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+
+  /* ---------- plugins: scalable list with dropdown rows ---------- */
+  .plugin-list { display: flex; flex-direction: column; gap: 4px; }
+  .plugin-row {
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .plugin-row:hover { border-color: var(--accent); }
+  .plugin-row .p-icon { font-size: 14px; flex: none; }
+  .plugin-row .p-name { font-weight: 600; font-size: 12.5px; flex: none; }
+  .plugin-row .p-desc {
+    color: var(--muted); font-size: 11.5px; flex: 1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .plugin-row .p-caret { color: var(--muted); font-size: 10px; flex: none; transition: transform .15s ease; }
+  .plugin-row.open .p-caret { transform: rotate(90deg); }
+  .plugin-body {
+    display: none; background: var(--panel); border: 1px solid var(--border);
+    border-top: none; border-radius: 0 0 6px 6px; padding: 8px 12px;
+    margin-top: -4px;
+  }
+  .plugin-body.show { display: block; }
+  .plugin-body .prewrap { max-height: 180px; }
+  .plugin-count { color: var(--muted); font-size: 11px; }
+
+  /* ---------- memory: the cockpit window into the brain ---------- */
+  .brain-scene {
+    border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; position: relative;
+    background: linear-gradient(180deg, #04060c 0%, #070b16 70%, #0a1020 100%);
+  }
+  .brain-window {
+    position: relative; height: 340px; overflow: hidden;
+    border-radius: 10px 10px 0 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(76,201,255,.07), transparent 70%),
+      linear-gradient(180deg, #03050a 0%, #060a14 60%, #0a1122 100%);
+  }
+  /* stars — three layers of tiny dots */
+  .stars, .stars.s2, .stars.s3 {
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,.8), transparent),
+      radial-gradient(1px 1px at 90px 120px, rgba(255,255,255,.6), transparent),
+      radial-gradient(1.5px 1.5px at 150px 60px, rgba(120,220,255,.9), transparent),
+      radial-gradient(1px 1px at 220px 170px, rgba(255,255,255,.5), transparent),
+      radial-gradient(1px 1px at 290px 40px, rgba(255,255,255,.7), transparent),
+      radial-gradient(1.5px 1.5px at 340px 130px, rgba(120,220,255,.8), transparent),
+      radial-gradient(1px 1px at 60px 210px, rgba(255,255,255,.4), transparent),
+      radial-gradient(1px 1px at 400px 220px, rgba(255,255,255,.6), transparent),
+      radial-gradient(1px 1px at 480px 90px, rgba(255,255,255,.5), transparent),
+      radial-gradient(1.5px 1.5px at 520px 190px, rgba(120,220,255,.7), transparent),
+      radial-gradient(1px 1px at 560px 40px, rgba(255,255,255,.4), transparent),
+      radial-gradient(1px 1px at 620px 250px, rgba(255,255,255,.5), transparent),
+      radial-gradient(1px 1px at 660px 120px, rgba(255,255,255,.6), transparent);
+    background-size: 700px 300px;
+    opacity: .7;
+  }
+  .stars.s2 { transform: translate(35px, 20px) scale(1.2); opacity: .45; }
+  .stars.s3 { transform: translate(-50px, 40px) scale(.8); opacity: .9; }
+  /* bright stars — a few big white-hot glows to pop against the nebula */
+  .bright-stars {
+    position: absolute; inset: 0; z-index: 3; pointer-events: none;
+    background-image:
+      radial-gradient(2.5px 2.5px at 120px 90px, rgba(255,255,255,1), rgba(255,255,255,0)),
+      radial-gradient(3px 3px at 340px 50px, rgba(220,240,255,1), rgba(220,240,255,0)),
+      radial-gradient(2px 2px at 500px 150px, rgba(255,255,255,1), rgba(255,255,255,0)),
+      radial-gradient(2.5px 2.5px at 620px 60px, rgba(200,235,255,1), rgba(200,235,255,0)),
+      radial-gradient(3.5px 3.5px at 250px 200px, rgba(255,255,255,1), rgba(255,255,255,0)),
+      radial-gradient(2px 2px at 60px 240px, rgba(255,255,255,.95), rgba(255,255,255,0)),
+      radial-gradient(2.5px 2.5px at 580px 230px, rgba(230,245,255,1), rgba(230,245,255,0));
+    filter: drop-shadow(0 0 6px rgba(180,225,255,.9));
+  }
+  /* nebulas — soft blue/gold glow clouds */
+  .nebula {
+    position: absolute; border-radius: 50%; filter: blur(60px);
+  }
+  .nebula.n1 {
+    width: 320px; height: 200px; left: -60px; top: 30px;
+    background: radial-gradient(circle, rgba(76,201,255,.18), transparent 70%);
+  }
+  .nebula.n2 {
+    width: 360px; height: 220px; right: -80px; bottom: -40px;
+    background: radial-gradient(circle, rgba(255,209,102,.10), transparent 70%);
+  }
+  .brain-hud {
+    position: absolute; top: 12px; left: 14px; right: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .18em;
+    color: rgba(120,220,255,.75); text-shadow: 0 0 8px rgba(76,201,255,.5);
+    z-index: 5;
+  }
+  .hud-live { color: rgba(46,230,168,.9); text-shadow: 0 0 8px rgba(46,230,168,.5); }
+  /* nodes — the constellation */
+  .brain-nodes { position: absolute; inset: 0; z-index: 4; }
+  .mem-node {
+    position: absolute; transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer; user-select: none;
+  }
+  .mem-node .core {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: radial-gradient(circle, #bfefff, var(--accent) 60%, transparent 80%);
+    box-shadow: 0 0 12px rgba(76,201,255,.9), 0 0 30px rgba(76,201,255,.35);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .mem-node:hover .core { transform: scale(1.35); box-shadow: 0 0 18px rgba(76,201,255,1), 0 0 46px rgba(76,201,255,.5); }
+  .mem-node .nlabel {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .05em;
+    color: rgba(200,235,255,.9); text-shadow: 0 0 6px rgba(76,201,255,.6);
+    background: rgba(6,12,24,.55); border: 1px solid rgba(76,201,255,.25);
+    padding: 1px 6px; border-radius: 8px; white-space: nowrap;
+    backdrop-filter: blur(3px);
+  }
+  .mem-node .ncount {
+    font-family: var(--mono); font-size: 9px; color: rgba(120,220,255,.65);
+  }
+  .mem-node.hot .core { background: radial-gradient(circle, #fff3c4, var(--gold) 60%, transparent 80%); box-shadow: 0 0 14px rgba(255,209,102,.95), 0 0 34px rgba(255,209,102,.4); }
+  /* detail pane — glass card that appears when a node is clicked */
+  .brain-detail {
+    position: absolute; right: 16px; top: 46px; width: 240px; max-height: 250px;
+    overflow: auto; z-index: 8;
+    background: rgba(8,16,32,.72);
+    border: 1px solid rgba(76,201,255,.35); border-radius: 8px;
+    padding: 10px 12px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 30px rgba(0,0,0,.6), 0 0 20px rgba(76,201,255,.15);
+    display: none;
+  }
+  .brain-detail.show { display: block; }
+  .brain-detail .dt-title {
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    border-bottom: 1px solid rgba(76,201,255,.25); padding-bottom: 6px; margin-bottom: 6px;
+  }
+  .brain-detail .dt-file {
+    font-family: var(--mono); font-size: 10.5px; color: var(--text);
+    padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+    display: flex; justify-content: space-between; gap: 6px;
+  }
+  .brain-detail .dt-file .dt-time { color: rgba(120,220,255,.6); flex: none; }
+  .brain-detail .dt-close {
+    position: absolute; top: 6px; right: 8px; cursor: pointer;
+    color: rgba(120,220,255,.7); font-size: 12px;
+  }
+  .brain-detail .dt-close:hover { color: #fff; }
+  .brain-floor {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 70px;
+    background: linear-gradient(180deg, transparent, rgba(10,17,34,.9) 60%, rgba(14,22,42,1));
+    z-index: 2; pointer-events: none;
+  }
+  /* dash — the cockpit console under the window */
+  .brain-dash {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    background: linear-gradient(180deg, #0c1220, #080d18);
+    border-top: 1px solid rgba(76,201,255,.2);
+    padding: 8px 14px;
+    font-family: var(--mono); font-size: 10.5px; color: var(--muted);
+  }
+  .dash-light {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    margin-right: 4px; vertical-align: 1px;
+  }
+  .dash-light.ok { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+  .dash-center { color: rgba(120,220,255,.8); letter-spacing: .03em; }
+  .dash-count { color: var(--gold); }
+  .dash-sep { color: rgba(255,255,255,.15); }
+
+  /* ---------- model picker (orchestrator seat) ---------- */
+  .model-picker {
+    display: none; margin-top: 8px;
+    background: var(--panel-2); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 10px 12px;
+  }
+  .model-picker.show { display: block; }
+  .mp-title { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+  .mp-sub { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+  .mp-sub b { color: var(--gold); }
+  .mp-row {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    padding: 5px 8px; border-radius: 5px; cursor: pointer;
+    border: 1px solid transparent; font-size: 12px;
+  }
+  .mp-row:hover { background: var(--panel-3); border-color: var(--border); }
+  .mp-row .mp-name { font-weight: 600; color: var(--text); }
+  .mp-row .mp-model { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .mp-row.current { border-color: var(--ok); }
+  .mp-row.current .mp-model { color: var(--ok); }
+  .mp-note { font-size: 10.5px; color: var(--muted); margin-top: 8px; font-style: italic; }
+
+  /* ---------- art studio face ---------- */
+  .art-studio { display: flex; flex-direction: column; gap: 10px; }
+  .art-inputrow { display: flex; gap: 8px; }
+  .art-field { flex: 1; resize: vertical; min-height: 44px; font-family: inherit; line-height: 1.35; }
+  .art-go {
+    background: linear-gradient(135deg, rgba(76,201,255,.25), rgba(255,209,102,.2));
+    color: var(--text); border: 1px solid var(--accent); border-radius: 6px;
+    padding: 4px 16px; font-size: 12.5px; cursor: pointer; font-weight: 700;
+  }
+  .art-go:hover { box-shadow: 0 0 12px rgba(76,201,255,.4); }
+  .art-go:disabled { opacity: .5; cursor: wait; }
+  .art-canvas {
+    min-height: 300px; max-height: 460px; overflow: auto;
+    background: #0a0d12; border: 1px solid var(--border); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .art-img { max-width: 100%; border-radius: 6px; display: block; }
+  .art-empty { color: var(--muted); font-style: italic; font-size: 12.5px; padding: 24px; text-align: center; }
+  .art-status { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+
+  /* ---------- THEMES — per-window decor, click to apply ---------- */
+  body.theme-cyberpunk {
+    --accent: #00ffc8; --gold: #ff2fd6; --bg: #05010e; --panel: #0c0620;
+    --panel-2: #150a30; --border: #2a1a55; --ok: #00ffc8; --warn: #ff2fd6; --bad: #ff3355;
+  }
+  body.theme-cyberpunk .card, body.theme-cyberpunk .face-layer { border-color: #2a1a55; box-shadow: 0 0 18px rgba(255,47,214,.12); }
+  body.theme-cyberpunk .logo { background: linear-gradient(135deg, #00ffc8, #ff2fd6); }
+  body.theme-cyberpunk h1 { color: #ff2fd6; }
+
+  body.theme-paisley {
+    --accent: #ff8fa3; --gold: #c9a227; --bg: #1a0f12; --panel: #24151c;
+    --panel-2: #311d26; --border: #4a2c3a; --ok: #ff8fa3; --warn: #c9a227; --bad: #e05a5a;
+  }
+  body.theme-paisley .card, body.theme-paisley .face-layer {
+    border-color: #4a2c3a;
+    background-image: radial-gradient(rgba(255,143,163,.06) 1px, transparent 1px);
+    background-size: 14px 14px;
+  }
+  body.theme-paisley h1 { color: #c9a227; }
+
+  body.theme-metallic {
+    --accent: #9db4d0; --gold: #d4af37; --bg: #0b0e13; --panel: #14181f;
+    --panel-2: #1d232d; --border: #3a4454; --ok: #7fd8be; --warn: #d4af37; --bad: #d96c6c;
+  }
+  body.theme-metallic .card, body.theme-metallic .face-layer {
+    border: 1px solid rgba(212,175,55,.35);
+    background-image: linear-gradient(160deg, rgba(255,255,255,.05), transparent 30%, transparent 70%, rgba(255,255,255,.04));
+  }
+  body.theme-metallic .logo { background: linear-gradient(135deg, #9db4d0, #d4af37); }
+  body.theme-metallic h1 { color: #d4af37; }
+
+  /* the artwork backdrop — drawn by the art engine per theme */
+  .theme-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-size: cover; background-position: center;
+    opacity: 0; transition: opacity .6s ease;
+  }
+  .theme-bg.show { opacity: 1; }
+  .theme-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background: rgba(4,6,12,.72);  /* keep the UI readable over the art */
+  }
+  .theme-bg.loading { opacity: .25; background: var(--panel-2); }
+  body > .wrap { position: relative; z-index: 1; }
+
+  /* ---------- node pop — glass detail when a master node is clicked ---------- */
+  .node-pop {
+    display: none; margin-top: 8px;
+    background: rgba(8,16,32,.78);
+    border: 1px solid rgba(76,201,255,.35); border-radius: 8px;
+    padding: 10px 12px; position: relative;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 30px rgba(0,0,0,.6), 0 0 20px rgba(76,201,255,.15);
+  }
+  .node-pop.show { display: block; }
+
+  /* ---------- FACES — plugin layers that overlap like pages ---------- */
+  .faces-bar {
+    display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+    margin-bottom: 10px; padding: 6px 10px;
+    background: rgba(6,10,18,.70); border: 1px solid rgba(76,201,255,.18); border-radius: 8px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 0 20px rgba(76,201,255,.06), inset 0 0 12px rgba(76,201,255,.02);
+  }
+  .faces-label {
+    font-size: 10px; letter-spacing: .15em; color: var(--muted);
+    font-weight: 700; margin-right: 4px;
+  }
+  .face-chip {
+    padding: 5px 14px; border-radius: 16px; font-size: 11.5px;
+    color: var(--muted); cursor: pointer; user-select: none;
+    border: 1px solid var(--border); background: rgba(10,14,20,.75);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    transition: all .18s ease; font-weight: 600; letter-spacing: .03em;
+    animation: chip-idle 4s ease-in-out infinite;
+  }
+  .face-chip:hover { transform: translateY(-1px); }
+  .face-chip.active { transform: translateY(-1px); }
+  @keyframes chip-idle {
+    0%, 100% { filter: brightness(1); }
+    50%      { filter: brightness(1.12); }
+  }
+  /* capabilities entry chip — holographic glow (per-face chips were merged into the Capabilities window) */
+  #cap-open-chip { border-color: rgba(76,201,255,.45); color: #4cc9ff; box-shadow: 0 0 8px rgba(76,201,255,.15); }
+  #cap-open-chip:hover { border-color: #4cc9ff; background: rgba(76,201,255,.15); box-shadow: 0 0 18px rgba(76,201,255,.45), inset 0 0 10px rgba(76,201,255,.10); }
+  #scene-flip-chip { border-color: rgba(255,209,102,.45); color: #ffd166; box-shadow: 0 0 8px rgba(255,209,102,.15); }
+  #scene-flip-chip:hover { border-color: #ffd166; background: rgba(255,209,102,.15); box-shadow: 0 0 18px rgba(255,209,102,.45), inset 0 0 10px rgba(255,209,102,.10); }
+  .face-stack { position: relative; }
+  .face-layer {
+    position: relative; z-index: 20;
+    background: rgba(8,12,20,.88); border: 1px solid rgba(76,201,255,.25);
+    border-radius: 10px; padding: 16px 18px; margin-bottom: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.6), 0 0 40px rgba(76,201,255,.10), inset 0 0 20px rgba(76,201,255,.03);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    animation: face-in .25s ease;
+  }
+  @keyframes face-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .face-layer .fl-head {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 12px;
+  }
+  .face-layer .fl-title { font-size: 16px; font-weight: 700; color: var(--gold); }
+  .face-layer .fl-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .face-layer .fl-close {
+    cursor: pointer; font-size: 14px; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 6px; padding: 2px 10px;
+  }
+  .face-layer .fl-close:hover { color: var(--bad); border-color: var(--bad); }
+  .face-layer .fl-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 800px) { .face-layer .fl-body { grid-template-columns: 1fr; } }
+  .face-layer .fl-convo {
+    font-family: var(--mono); font-size: 12px;
+    background: #0a0d12; border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; min-height: 180px; max-height: 260px; overflow: auto;
+  }
+  .face-layer .fl-convo .c-you { color: var(--gold); }
+  .face-layer .fl-convo .c-agent { color: var(--accent); }
+  .face-layer .fl-tools { display: flex; flex-direction: column; gap: 6px; }
+  .face-layer .fl-tool {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; font-size: 12px; color: var(--text);
+  }
+  .face-layer .fl-tool b { color: var(--accent); }
+
+  /* ---------- research button (in the orchestrator post) ---------- */
+  .research-btn {
+    background: rgba(76,201,255,.10); color: var(--accent);
+    border: 1px solid rgba(76,201,255,.4); border-radius: 6px;
+    padding: 2px 10px; font-size: 11px; cursor: pointer;
+    white-space: nowrap; font-weight: 600;
+  }
+  .research-btn:hover { background: rgba(76,201,255,.2); box-shadow: 0 0 10px rgba(76,201,255,.3); }
+
+  /* ---------- CAPABILITIES WINDOW — one compact entry, scrollable list ---------- */
+  .cap-overlay {
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(4,7,16,.72); backdrop-filter: blur(3px);
+    display: none; align-items: center; justify-content: center;
+  }
+  .cap-overlay.show { display: flex; }
+  .cap-window {
+    width: min(620px, 92vw); max-height: 76vh; display: flex; flex-direction: column;
+    background: rgba(14,17,23,.97); border: 1px solid rgba(76,201,255,.35);
+    border-radius: 10px; box-shadow: 0 8px 40px rgba(0,0,0,.6), 0 0 30px rgba(76,201,255,.12);
+  }
+  .cap-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-bottom: 1px solid var(--border); flex: none;
+  }
+  .cap-head .cap-title { font-size: 14px; font-weight: 700; color: var(--gold); }
+  .cap-head .cap-close {
+    cursor: pointer; font-size: 13px; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 6px; padding: 2px 10px;
+  }
+  .cap-head .cap-close:hover { color: var(--bad); border-color: var(--bad); }
+  .cap-scroll { overflow-y: auto; padding: 12px 16px; }
+  .cap-item {
+    border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px;
+    margin-bottom: 8px; background: var(--panel-2);
+  }
+  .cap-item.ready { border-color: rgba(46,230,168,.4); }
+  .cap-item h3 {
+    font-size: 13px; color: var(--accent); display: flex; align-items: center; gap: 8px;
+  }
+  .cap-item .cap-what { color: var(--text); font-size: 12px; margin: 4px 0; }
+  .cap-item .cap-receipts { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+  .cap-item .cap-receipts .rok { color: var(--ok); }
+  .cap-item .cap-receipts .rmiss { color: var(--bad); }
+  .cap-item .cap-open {
+    margin-top: 6px; display: inline-block; cursor: pointer;
+    background: rgba(76,201,255,.10); color: var(--accent);
+    border: 1px solid rgba(76,201,255,.4); border-radius: 6px;
+    padding: 2px 10px; font-size: 11px; font-weight: 600;
+  }
+  .cap-item .cap-open:hover { background: rgba(76,201,255,.2); }
+  .slot-entry {
+    margin-top: 8px; display: flex; align-items: center; gap: 8px;
+    background: var(--panel-2); border: 1px dashed rgba(76,201,255,.35);
+    border-radius: 6px; padding: 7px 10px; cursor: pointer; font-size: 12px;
+  }
+  .slot-entry:hover { border-color: var(--accent); box-shadow: 0 0 10px rgba(76,201,255,.15); }
+
+  /* ---------- SCENE FLIP — describe it, the room becomes it ---------- */
+  .scene-bar {
+    display: none; align-items: center; gap: 6px; margin-left: 6px;
+  }
+  .scene-bar.show { display: inline-flex; }
+  .scene-field {
+    width: 220px; background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text); padding: 3px 8px; border-radius: 6px; font-size: 11px;
+    font-family: var(--font);
+  }
+  .scene-go {
+    background: var(--gold); color: #141002; border: none; border-radius: 6px;
+    padding: 3px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .voice-btn {
+    background: none; border: 1px solid var(--border); border-radius: 6px;
+    color: var(--muted); padding: 2px 8px; font-size: 11px; cursor: pointer;
+  }
+  .voice-btn:hover { color: var(--text); border-color: var(--accent); }
+</style>
+<link rel="stylesheet" href="cockpit_art.css">
+</head>
+<body>
+<div class="nebula-bg"></div>
+<div class="scanlines"></div>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">◆</div>
+      <div>
+        <h1>The Cockpit <span class="pill" id="os-pill">BOOTING</span></h1>
+        <div class="meta" id="hdr-meta">loading…</div>
+      </div>
+    </div>
+    <div class="hdr-lights" id="sys-lights"></div>
+    <div class="meta" id="refresh-meta" style="display:flex; align-items:center; gap:10px;">
+      <button class="help-btn" id="tour-btn">▶ Guide me</button>
+      <button class="voice-btn" id="voice-btn" title="the cockpit narrates itself — pick the voice">🔊 voice: female</button>
+      <span id="refresh-txt">refresh in 30s</span>
+    </div>
+  </header>
+
+  <div id="stale-banner" class="error">Data is stale — check collector.</div>
+
+  <div class="welcome" id="welcome">
+    <div class="wtxt">
+      <b>Welcome to THE COCKPIT.</b>
+      &nbsp;This is your agent's room — everything on this page is alive.
+      The lights above are health checks, the cards are your team, the feed
+      on the left is the work log. Press <b>▶ Guide me</b> for a 30-second
+      tour, or tap any <b>?</b> on a card. You can build as you go — the
+      harness grows with you.
+    </div>
+    <button class="help-btn" id="welcome-x">Got it ✕</button>
+  </div>
+
+  <nav class="nav" id="nav">
+    <div class="nav-item active" data-view="dashboard">Dashboard</div>
+    <div class="nav-item" data-view="nodes">Nodes</div>
+    <div class="nav-item" data-view="plugins">Plugins</div>
+    <div class="nav-item" data-view="memory">Memory</div>
+    <div class="nav-item" data-view="build">Build Feed</div>
+    <div class="nav-item" data-view="trading">Trading</div>
+    <div class="nav-item" data-view="skills">Skills</div>
+  </nav>
+
+  <!-- FACES — each master/plugin is its own layer, stacked like pages -->
+  <div class="faces-bar" id="faces-bar">
+    <span class="faces-label">FACES</span>
+    <div class="face-chip active" data-face="deck">◆ Command Deck</div>
+    <div class="face-chip" id="cap-open-chip" title="every room and capability — one scrollable window">▤ Capabilities <span class="count" id="cap-chip-count"></span></div>
+    <span class="faces-label" style="margin-left:8px;">THEME</span>
+    <div class="face-chip theme-chip active" data-theme="default">▣ Default</div>
+    <div class="face-chip theme-chip" data-theme="cyberpunk">⚡ Cyberpunk</div>
+    <div class="face-chip theme-chip" data-theme="paisley">❀ Paisley</div>
+    <div class="face-chip theme-chip" data-theme="metallic">✦ Metallic</div>
+    <div class="face-chip theme-chip" data-theme="graffiti">🖍️ Graffiti</div>
+    <div class="face-chip theme-chip" data-theme="rusty">🛠️ Rusty</div>
+    <div class="face-chip" id="scene-flip-chip" title="describe the room you want — the cockpit becomes it">✨ Describe a scene</div>
+    <span class="scene-bar" id="scene-bar">
+      <input class="scene-field" id="scene-field" type="text" placeholder="a beach at sunset… a jungle… anything" autocomplete="off">
+      <button class="scene-go" id="scene-go">FLIP</button>
+    </span>
+  </div>
+  <!-- CAPABILITIES — the scrollable markdown window: every room, every slot, once -->
+  <div class="cap-overlay" id="cap-overlay">
+    <div class="cap-window" id="cap-window">
+      <div class="cap-head">
+        <span class="cap-title">▤ Capabilities — every room the machine can be</span>
+        <span class="cap-close" id="cap-close">✕ close</span>
+      </div>
+      <div class="cap-scroll" id="cap-scroll"></div>
+    </div>
+  </div>
+  <div class="face-stack" id="face-stack"></div>
+
+  <main class="grid" id="main">
+
+    <!-- Dashboard -->
+    <div class="layout grid-full" data-view-panel="dashboard">
+      <!-- TEAM ROW — the brains + the standing posts -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; grid-column:1 / -1;">
+        <section class="card">
+          <h2><span class="h2row">Master Nodes <span class="count" id="master-count"></span> <button class="info-btn" data-help="Master nodes are the brains of the machine — each one a specialist loaded with knowledge about one thing: art, music, video, memory, a skill, a craft. The swarm researches and builds them. A master node can also be a plugin: install it and the whole interface becomes that realm — plug in an art master and you are in the art room. Click any node to see what it does.">?</button></span></h2>
+          <div id="node-grid" class="node-grid"></div>
+          <div id="slot-entry" class="slot-entry" title="the six capability slots — receipts inside">
+            <span>▤</span><span id="slot-entry-text">Capability slots — open the list</span><span style="margin-left:auto; color:var(--accent);">open →</span>
+          </div>
+        </section>
+        <section class="card">
+          <h2><span class="h2row">Standing Posts <span class="count" id="post-count"></span> <button class="info-btn" data-help="This is the swarm — a mixture of experts. These agents go out and do the research to build your master nodes: the curator organizes the brain, the researcher hunts and verifies knowledge, the architect designs, the builder builds, the verifier checks the work, the integrator installs it. When you ask for something new, the swarm goes and builds you a master for it.">?</button></span></h2>
+          <div id="post-grid" class="node-grid"></div>
+        </section>
+      </div>
+
+      <!-- LEFT WINDOW — orchestrator command post (the talk box) -->
+      <section class="card" style="grid-column:1;">
+        <h2 style="margin-bottom:6px;"><span class="h2row"><span class="orch-name">Orchestrator</span> <button class="research-btn" id="research-btn">🔬 Deep Research</button> <span class="pill live" id="orch-model">model</span> <button class="info-btn" data-help="This is the command post — the orchestrator brain you talk to. The green badge shows the model running the seat right now; click it to pick a different model through Hermes. The Deep Research button sends the swarm — a mixture of expert agents — out to hunt, verify and bring back deep knowledge.">?</button></span></h2>
+        <div class="convo" id="convo-box">
+          <div class="convo-msg you"><b>you</b> &nbsp;— this is your command post. Tell the orchestrator what to build.</div>
+          <div class="convo-msg hermes"><b>orchestrator</b> &nbsp;— replies land here. Watch the build window for the work as it happens.</div>
+        </div>
+        <div class="convo-input">
+          <span class="convo-prompt">❯</span>
+          <input class="convo-field" id="convo-field" type="text" placeholder="type your question here — or tap the mic and speak…" autocomplete="off">
+          <button class="mic-btn" id="mic-btn" title="speak your question">🎙️</button>
+        </div>
+        <div class="model-picker" id="model-picker">
+          <div class="mp-title">Switch orchestrator model</div>
+          <div class="mp-sub">The seat runs on <b id="mp-current">—</b>. Pick the brain you want driving the command post:</div>
+          <div id="mp-list"></div>
+          <div class="mp-note">Switching happens in Hermes — this list is the map to it. Click a profile to see how.</div>
+        </div>
+      </section>
+
+      <!-- RIGHT WINDOW — build (what is being built) -->
+      <section class="card feed-card" style="grid-column:2;" id="feed-card">
+        <h2 id="feed-toggle" style="cursor:pointer; user-select:none;">
+          <span class="h2row">Build Window <span class="pill live">LIVE</span> <span class="count" id="feed-caret">▾</span> <button class="info-btn" data-help="This is what is being built — every plugin, page and capability the machine creates lands here as it works, so you can watch it build for you. Click the title to collapse it into a tab.">?</button></span>
+        </h2>
+        <div class="feed" id="feed-box">watching build log…</div>
+        <div class="feed-hint">what the machine is building · click title to collapse</div>
+      </section>
+
+    <!-- Trading view — the ORACLE gold desk wired into the cockpit -->
+    <section class="card grid-full" data-view-panel="trading">
+      <h2><span class="h2row">ORACLE · Gold Desk <span class="pill live" id="trade-live">—</span> <button class="info-btn" data-help="The ORACLE gold engine's live desk, wired straight into the cockpit. The desk reads the night CSV, locks the day map (peaks/valleys + regime), and corrects it per-bar against the live tape. Buy/sell levels are the CONFIRMED REVERSAL entries — the entry always rides the reversal, never the approach. The full chart lives on port 8714.">?</button></span></h2>
+      <div id="trade-grid" class="node-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));"></div>
+      <div id="trade-detail" style="margin-top:8px;"></div>
+    </section>
+
+    <!-- Skills view — every skill on the machine, plus the agent command post -->
+    <section class="card grid-full" data-view-panel="skills">
+      <h2><span class="h2row">Skill Library <span class="count" id="skills-count"></span> <button class="info-btn" data-help="Every skill installed on this machine — the full capability library. Click a skill to load it into the agent command below, or hit RUN to send any command to the real Hermes agent. The agent runs locally with full tool access: terminal, browser, files, skills.">?</button></span></h2>
+      <input id="skills-filter" type="text" placeholder="filter skills…" style="width:100%; max-width:340px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:6px 10px; border-radius:6px; margin-bottom:8px; font-family:var(--font);">
+      <div id="skills-grid" class="node-grid" style="grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));"></div>
+      <h2 style="margin-top:14px;"><span class="h2row">Self-Driving Board <span class="count" id="board-count"></span> <button class="info-btn" data-help="The 5-floor framework: you drop a one-sentence idea (capture), the agent classifies it and writes a plan (classify), you gate it with APPROVE or REJECT, the agent builds it and writes receipts (implement), finished work lands in the gallery. Every card is a JSON file in board/ and every change is logged to the vault BOARD_LOG.md.">?</button></span></h2>
+      <div class="convo-input" style="border:none; padding:0; margin-bottom:8px;">
+        <span class="convo-prompt">◆</span>
+        <input class="convo-field" id="board-field" type="text" placeholder="one sentence — the board classifies, plans, gates, builds…" autocomplete="off">
+        <button class="mic-btn" id="board-send" title="capture" style="background:var(--accent); color:#0a0f14;">CAPTURE</button>
+      </div>
+      <div id="board-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;"></div>
+      <h2 style="margin-top:14px;"><span class="h2row">Agent Command <span class="pill live" id="agent-status">IDLE</span> <button class="info-btn" data-help="Send any command to the real Hermes agent — it runs with full tool access on this machine and its output streams into the feed below. One job at a time.">?</button></span></h2>
+      <div class="convo-input" style="border:none; padding:0; margin-bottom:8px;">
+        <span class="convo-prompt">❯</span>
+        <input class="convo-field" id="agent-field" type="text" placeholder="tell the agent what to do — full tools, all skills…" autocomplete="off">
+        <button class="mic-btn" id="agent-run" title="run" style="background:var(--ok); color:#04140c;">RUN</button>
+      </div>
+      <div id="agent-chat" style="max-height:340px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--panel-2); display:flex; flex-direction:column; gap:8px;"></div>
+      <div class="feed" id="agent-feed" style="max-height:160px;">live agent output streams here…</div>
+    </section>
+
+    <!-- Nodes view -->
+    <section class="card grid-full" data-view-panel="nodes">
+      <h2>Cron Schedule</h2>
+      <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Schedule</th><th>Next</th><th>Last</th><th>Status</th></tr></thead>
+        <tbody id="cron-table"></tbody>
+      </table>
+    </section>
+
+    <!-- Plugins view -->
+    <div id="plugin-sections" class="grid-full" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px;"></div>
+
+    <!-- Memory view — the cockpit window into the brain -->
+    <section class="card grid-full" data-view-panel="memory">
+      <h2><span class="h2row">Memory Bank <span class="count" id="vault-count"></span> <button class="info-btn" data-help="This is the cockpit window into the machine's brain — your Obsidian vault. Each glowing node is a memory folder, each spark is a note. Click a node to look inside it. The window is live: what the harness builds and remembers lands here as it happens.">?</button></span></h2>
+      <div class="brain-scene" id="brain-scene">
+        <div class="brain-window" id="brain-window">
+          <div class="stars"></div>
+          <div class="stars s2"></div>
+          <div class="stars s3"></div>
+          <div class="bright-stars"></div>
+          <div class="nebula n1"></div>
+          <div class="nebula n2"></div>
+          <div class="brain-hud">
+            <span class="hud-label">MEMORY CORE</span>
+            <span class="hud-live" id="vault-hud-live">—</span>
+          </div>
+          <div class="brain-nodes" id="brain-nodes"></div>
+          <div class="brain-detail" id="brain-detail"></div>
+          <div class="brain-floor"></div>
+        </div>
+        <div class="brain-dash" id="brain-dash">
+          <div class="dash-left">
+            <span class="dash-light ok"></span> brain online
+            <span class="dash-sep">·</span>
+            <span class="dash-light ok"></span> vault linked
+          </div>
+          <div class="dash-center" id="dash-msg">sitting in the chair — looking into the abyss of memory</div>
+          <div class="dash-right">
+            <span class="dash-count" id="dash-count">0 notes</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Research view -->
+    <section class="card" data-view-panel="research">
+      <h2>Latest Hunt</h2>
+      <div id="hunt-card"></div>
+    </section>
+    <section class="card" data-view-panel="research">
+      <h2>Latest Bridge</h2>
+      <div id="bridge-card"></div>
+    </section>
+
+  </main>
+
+  <div class="footer">The Cockpit — harness desk · static JSON, thin page, no engine data</div>
+</div>
+
+<script>
+  const POLL_MS = 30000;
+  const FEED_POLL_MS = 5000;
+  let nextRefresh = POLL_MS / 1000;
+  let timer = null;
+  let activeView = 'dashboard';
+
+  function fmt12(iso) {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    return d.toLocaleString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit', month: 'short', day: 'numeric' });
+  }
+  function statusClass(state) {
+    if (typeof state !== 'string') return 'warn';
+    const s = state.toLowerCase();
+    if (['ok', 'running', 'active', 'true', 'success', 'completed', 'idle', 'online'].includes(s)) return 'ok';
+    if (['fail', 'failed', 'error', 'stopped', 'inactive', 'offline'].includes(s)) return 'bad';
+    return 'warn';
+  }
+  function el(tag, attrs = {}, children = []) {
+    const e = document.createElement(tag);
+    Object.entries(attrs).forEach(([k, v]) => { if (k === 'text') e.textContent = v; else e.setAttribute(k, v); });
+    children.forEach(c => e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c));
+    return e;
+  }
+  function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+  /* ---------- system lights ---------- */
+  function renderLights(data) {
+    const root = document.getElementById('sys-lights');
+    root.innerHTML = '';
+    const lights = [
+      { label: 'Gateway', state: data.gateway ? 'ok' : 'warn' },
+      { label: 'Research Swarm', state: data.generated_at ? 'ok' : 'bad' },
+      { label: 'Plugins', state: (data.plugins || []).length ? 'ok' : 'warn' },
+      { label: 'Cron', state: (data.cron || []).length ? 'ok' : 'warn' },
+      { label: 'Profiles', state: (data.profiles || []).length ? 'ok' : 'warn' },
+      { label: 'Vault Brain', state: data.bridge || data.hunt ? 'ok' : 'warn' },
+      { label: 'Swarm', state: (data.swarm || []).length ? 'ok' : 'warn' },
+    ];
+    lights.forEach(l => {
+      root.appendChild(el('div', { class: 'light' }, [
+        el('span', { class: `dot ${l.state}` }),
+        el('span', { class: 'lname', text: l.label }),
+      ]));
+    });
+  }
+
+  /* ---------- master nodes (real master profiles) ---------- */
+  const MASTER_NAMES = ['orchestrator', 'ai-research', 'social-media', 'communication'];
+  // what each node does + the services a user can plug into it
+  const NODE_KNOW = {
+    orchestrator: { what: 'The command post — the brain you talk to. It drives the whole machine.', services: [['Model', 'choose in Hermes'], ['Voice', 'ElevenLabs']] },
+    'ai-research': { what: 'The research node — hunts knowledge, verifies sources, builds the daily brief.', services: [['Hunt', 'daily brief'], ['Sources', 'verified']] },
+    'social-media': { what: 'The broadcast node — writes and posts the day\'s message to the world.', services: [['Posts', 'scheduled'], ['Platforms', 'connected']] },
+    communication: { what: 'The comms node — talks to people, answers, delivers the messages.', services: [['Inbox', 'messages'], ['Voice', 'ElevenLabs']] },
+    default: { what: 'The general-purpose brain — anything you ask, any time.', services: [['Model', 'tencent hy3']] },
+    friend: { what: 'The companion node — a friendly brain for everyday chat.', services: [['Chat', 'casual']] },
+    'pi-corner-1': { what: 'A learning corner — one seat of the teaching swarm.', services: [['Teach', 'any topic']] },
+    undertow: { what: 'A specialist node with its own field of work.', services: [['Special', 'dedicated']] },
+  };
+  const NODE_FALLBACK = { what: 'A specialist brain on the machine.', services: [] };
+  function renderNodes(data) {
+    const root = document.getElementById('node-grid');
+    root.innerHTML = '';
+    const all = data.profiles || [];
+    const masters = all.filter(p => MASTER_NAMES.includes(p.name));
+    const rest = all.filter(p => !MASTER_NAMES.includes(p.name));
+    document.getElementById('master-count').textContent = `(${masters.length} + ${rest.length})`;
+    const show = [...masters, ...rest].slice(0, 10);
+    show.forEach(p => {
+      const active = p.status === 'running' || p.active;
+      const know = NODE_KNOW[p.name] || NODE_FALLBACK;
+      const card = el('div', { class: `node-card ${active ? 'active' : ''}`, style: 'cursor:pointer;' }, [
+        el('div', { class: 'node-name' }, [
+          el('span', { class: `dot ${active ? 'ok' : 'bad'}` }),
+          document.createTextNode(p.name),
+          active ? el('span', { class: 'node-tag run', text: 'RUN' }) : null,
+        ]),
+        el('div', { class: 'node-meta', text: `${p.model || '-'}${p.gateway === 'running' ? ' · gw up' : ''}` }),
+        el('div', { class: 'node-meta', text: know.what.slice(0, 46) + '…', style: 'font-size:10px;' }),
+      ]);
+      card.addEventListener('click', () => openNodeKnow(p, know));
+      root.appendChild(card);
+    });
+  }
+  // future/plugin master nodes the swarm can build — shown as buildable slots
+  const FUTURE_MASTERS = [
+    { name: 'art', what: 'an art master — plug it in and the cockpit becomes an art studio: generate, edit, iterate on images and designs.' },
+    { name: 'music', what: 'a music master — the room turns into a music studio: synthesize tracks, compose, produce.' },
+    { name: 'video', what: 'a video master — the cockpit becomes a video suite: create clips, edit, animate.' },
+    { name: 'youtube', what: 'a channel master — the whole interface becomes a YouTube machine: scripts, thumbnails, titles, uploads.' },
+    { name: 'voice', what: 'a voice master — plug in your own voice, or pick a service like ElevenLabs, and the machine speaks in it.' },
+    { name: 'memory', what: 'a memory master — the brain that remembers everything and connects ideas across all your nodes.' },
+  ];
+  const SLOT_ICONS = { art: '🎨', music: '🎵', video: '🎬', youtube: '▶', voice: '🎙️', memory: '🧠' };
+  // slots ↔ faces, merged ONCE (dedup): one entry per capability, never twice on screen
+  const SLOT_FACE = { art: 'art', music: 'music', video: 'video', voice: 'voice', memory: 'memory' };
+  function slotData(data) {
+    const probed = (data && data.slots) ? data.slots : [];
+    return probed.length ? probed : FUTURE_MASTERS.map(m => ({ ...m, status: 'BUILD', receipts: [] }));
+  }
+  function renderFutureMasters(data) {
+    // compact entry point only — the full scrollable list lives in the capabilities window
+    const slots = slotData(data);
+    const nReady = slots.filter(m => m.status === 'READY').length;
+    const txt = document.getElementById('slot-entry-text');
+    if (txt) txt.textContent = `Capability slots — ${nReady}/${slots.length} READY · receipts inside`;
+    const chipCount = document.getElementById('cap-chip-count');
+    if (chipCount) chipCount.textContent = `(${slots.length + 1})`; // slots + the TikTok room
+    if (document.getElementById('cap-overlay').classList.contains('show')) renderCapWindow(data);
+  }
+
+  /* ---------- capabilities window — the scrollable markdown list ---------- */
+  let _capData = null;
+  function renderCapWindow(data) {
+    _capData = data;
+    const root = document.getElementById('cap-scroll');
+    root.innerHTML = '';
+    const slots = slotData(data);
+    const seenFaces = new Set();
+    slots.forEach(m => {
+      const ready = m.status === 'READY';
+      const faceKey = SLOT_FACE[m.name] || null;
+      if (faceKey) seenFaces.add(faceKey);
+      const item = el('div', { class: `cap-item ${ready ? 'ready' : ''}` });
+      item.appendChild(el('h3', {}, [
+        document.createTextNode(`${SLOT_ICONS[m.name] || '◆'} ${m.name}`),
+        el('span', { class: `node-tag ${ready ? 'run' : ''}`, text: ready ? 'READY' : 'BUILD' }),
+      ]));
+      item.appendChild(el('div', { class: 'cap-what', text: m.what }));
+      if (ready && (m.receipts || []).length) {
+        const rec = el('div', { class: 'cap-receipts' });
+        m.receipts.forEach(r => {
+          rec.appendChild(el('div', { class: r.ok ? 'rok' : 'rmiss', text: `${r.ok ? '✓' : '✗'} ${r.what} — ${r.ok ? 'on disk' : 'missing'}` }));
+        });
+        item.appendChild(rec);
+      }
+      if (faceKey && FACES[faceKey]) {
+        const btn = el('span', { class: 'cap-open', text: `enter the ${FACES[faceKey].title} →` });
+        btn.addEventListener('click', () => { closeCapWindow(); openFace(faceKey); });
+        item.appendChild(btn);
+      }
+      root.appendChild(item);
+    });
+    // faces with no slot (the TikTok Creator room) — listed once, here only
+    Object.keys(FACES).forEach(k => {
+      if (seenFaces.has(k) || SLOT_FACE[k]) return;
+      const f = FACES[k];
+      const item = el('div', { class: 'cap-item' });
+      item.appendChild(el('h3', { text: f.title }));
+      item.appendChild(el('div', { class: 'cap-what', text: f.sub }));
+      const btn = el('span', { class: 'cap-open', text: `enter the ${f.title} →` });
+      btn.addEventListener('click', () => { closeCapWindow(); openFace(k); });
+      item.appendChild(btn);
+      root.appendChild(item);
+    });
+  }
+  function openCapWindow() {
+    if (_capData) renderCapWindow(_capData);
+    document.getElementById('cap-overlay').classList.add('show');
+    try { localStorage.setItem('cockpit-capwin', '1'); } catch (e) {}
+    speak('The capabilities. Every room this machine can be — scroll through them, tap one, and the cockpit becomes it.');
+  }
+  function closeCapWindow() {
+    document.getElementById('cap-overlay').classList.remove('show');
+    try { localStorage.setItem('cockpit-capwin', '0'); } catch (e) {}
+  }
+  document.getElementById('cap-open-chip').addEventListener('click', openCapWindow);
+  document.getElementById('cap-close').addEventListener('click', closeCapWindow);
+  document.getElementById('cap-overlay').addEventListener('click', e => { if (e.target.id === 'cap-overlay') closeCapWindow(); });
+  document.getElementById('slot-entry').addEventListener('click', openCapWindow);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCapWindow(); });
+  /* ---------- trading — the ORACLE gold desk ---------- */
+  function fmtNum(v, d = 2) { return (v === null || v === undefined) ? '—' : Number(v).toFixed(d); }
+  function renderTrading(data) {
+    const t = data.trading || {};
+    const root = document.getElementById('trade-grid');
+    const det = document.getElementById('trade-detail');
+    const live = document.getElementById('trade-live');
+    if (!root) return;
+    root.innerHTML = '';
+    const svcOk = (t.services || []).every(s => s.state === 'active');
+    live.textContent = t.board_ok ? 'LIVE' : 'OFFLINE';
+    live.style.color = t.board_ok ? 'var(--ok)' : 'var(--bad)';
+    const b = t.board || {};
+    const now = new Date();
+    const boardDate = b.date ? new Date(b.date + 'T12:00:00') : null;
+    const stale = boardDate ? (now - boardDate) > 36 * 3600e3 : true;
+    const cards = [
+      { k: 'Map Date', v: b.date || '—', cls: stale ? 'bad' : 'ok', sub: stale ? 'STALE — do not trade this board' : 'current' },
+      { k: 'Last Bar', v: b.last_bar || '—', sub: `${fmtNum(b.n_live_bars, 0)} live bars · ${fmtNum(b.n_day_bars, 0)} day bars` },
+      { k: 'Regime Corr', v: fmtNum(b.corr, 3), sub: 'night→day correlation (the lock)' },
+      { k: 'Mean Err', v: fmtNum(b.mean_e, 2) + ' pts', sub: 'honest map error vs tape' },
+      { k: 'Peaks / Valleys', v: `${fmtNum(b.n_peaks, 0)} / ${fmtNum(b.n_valleys, 0)}`, sub: `total leg ${fmtNum(b.total_pts, 1)} pts` },
+      { k: 'BUY Level', v: fmtNum(b.buy_level, 2), cls: 'ok', sub: 'confirmed reversal — valley +4' },
+      { k: 'SELL Level', v: fmtNum(b.sell_level, 2), cls: 'bad', sub: 'confirmed reversal — peak −4' },
+    ];
+    cards.forEach(c => {
+      root.appendChild(el('div', { class: `node-card ${c.cls ? 'active' : ''}` }, [
+        el('div', { class: 'node-name' }, [
+          el('span', { class: `dot ${c.cls || 'ok'}` }),
+          document.createTextNode(c.k),
+        ]),
+        el('div', { class: 'node-meta', text: String(c.v), style: 'font-size:16px; font-weight:600;' }),
+        el('div', { class: 'node-meta', text: c.sub || '', style: 'font-size:10px;' }),
+      ]));
+    });
+    if (det) {
+      const svcRow = (t.services || []).map(s =>
+        `${s.name}: ${s.state === 'active' ? '✓' : '✗ ' + s.state}`).join(' · ');
+      det.innerHTML = `<div class="node-meta" style="font-size:11px;">${svcRow || 'no service data'}</div>` +
+        (stale ? `<div class="node-meta" style="color:var(--warn);font-size:11px;">⚠ board ${b.date} is behind the clock — build-window rule: tonight's night session completes 06:00 ET before today's map can build. Do not trade a stale board.</div>` : '') +
+        `<div class="node-meta" style="font-size:11px;"><a href="http://127.0.0.1:8714/" target="_blank" style="color:var(--accent);">open full chart → :8714</a></div>`;
+    }
+  }
+
+  /* ---------- skills library + agent command ---------- */
+  let SKILL_INDEX = [];
+  async function loadSkills() {
+    try {
+      const r = await fetch('/skills?cb=' + Date.now(), { cache: 'no-store' });
+      const d = await r.json();
+      SKILL_INDEX = d.skills || [];
+      renderSkills('');
+      const fl = document.getElementById('skills-filter');
+      if (fl && !fl.dataset.bound) {
+        fl.dataset.bound = 1;
+        fl.addEventListener('input', () => renderSkills(fl.value));
+      }
+    } catch (e) { console.error('skills load failed', e); }
+  }
+  function renderSkills(filter) {
+    const root = document.getElementById('skills-grid');
+    if (!root) return;
+    root.innerHTML = '';
+    const f = (filter || '').toLowerCase();
+    const list = SKILL_INDEX.filter(s =>
+      !f || s.name.toLowerCase().includes(f) || (s.category || '').toLowerCase().includes(f));
+    document.getElementById('skills-count').textContent = `(${list.length}/${SKILL_INDEX.length})`;
+    list.slice(0, 200).forEach(s => {
+      const card = el('div', { class: 'node-card', style: 'cursor:pointer;' }, [
+        el('div', { class: 'node-name' }, [
+          el('span', { class: 'dot ok' }),
+          document.createTextNode(s.name),
+        ]),
+        el('div', { class: 'node-meta', text: s.category || 'top-level', style: 'font-size:10px;' }),
+      ]);
+      card.addEventListener('click', () => {
+        const f2 = document.getElementById('agent-field');
+        if (f2) {
+          f2.value = `load the "${s.name}" skill and tell me what it can do`;
+          f2.focus();
+        }
+      });
+      root.appendChild(card);
+    });
+  }
+  async function sendAgentCommand() {
+    const f = document.getElementById('agent-field');
+    const status = document.getElementById('agent-status');
+    if (!f || !f.value.trim()) return;
+    const prompt = f.value.trim();
+    f.value = '';
+    status.textContent = 'RUNNING';
+    status.style.color = 'var(--warn)';
+    try {
+      await fetch('https://live.amartiecom.com/agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+    } catch (e) {
+      status.textContent = 'ERROR';
+      status.style.color = 'var(--bad)';
+    }
+  }
+  async function pollAgent() {
+    const status = document.getElementById('agent-status');
+    const feed = document.getElementById('agent-feed');
+    if (!status || !feed) return;
+    try {
+      const r = await fetch('/agent_last?cb=' + Date.now(), { cache: 'no-store' });
+      const d = await r.json();
+      if (d.running) {
+        status.textContent = 'RUNNING';
+        status.style.color = 'var(--warn)';
+      } else if (d.ok === true) {
+        status.textContent = 'DONE';
+        status.style.color = 'var(--ok)';
+      } else if (d.ok === false) {
+        status.textContent = 'FAIL';
+        status.style.color = 'var(--bad)';
+      } else {
+        status.textContent = 'IDLE';
+        status.style.color = '';
+      }
+      const r2 = await fetch('/agent_feed?cb=' + Date.now(), { cache: 'no-store' });
+      const d2 = await r2.json();
+      const lines = (d2.lines || []).map(ln => {
+        try { const j = JSON.parse(ln); return j; } catch (e) { return null; }
+      }).filter(Boolean).slice(-30);
+      feed.innerHTML = lines.map(j => {
+        const cls = j.kind === 'start' ? 'ok' : j.kind === 'done' ? (j.ok ? 'ok' : 'bad') : 'dim';
+        const txt = esc(j.kind === 'start' ? '▶ ' + (j.prompt || '') :
+                  j.kind === 'done' ? (j.ok ? '✓ finished rc=' + j.rc : '✗ failed rc=' + j.rc) :
+                  (j.line || ''));
+        return `<div class="${cls}" style="padding:1px 0;">${esc(txt).slice(0, 300)}</div>`;
+      }).join('\n') || 'agent output lands here…';
+      feed.scrollTop = feed.scrollHeight;
+    } catch (e) { /* keep last */ }
+  }
+  function bindAgentUI() {
+    const run = document.getElementById('agent-run');
+    const f = document.getElementById('agent-field');
+    if (run && !run.dataset.bound) {
+      run.dataset.bound = 1;
+      run.addEventListener('click', sendAgentCommand);
+    }
+    if (f && !f.dataset.bound) {
+      f.dataset.bound = 1;
+      f.addEventListener('keydown', e => { if (e.key === 'Enter') sendAgentCommand(); });
+    }
+  }
+
+  // ---- Self-Driving Board: capture → classify → gate → implement → gallery ----
+  const BOARD_STATUS_COLOR = {
+    queued: 'var(--warn)', gated: 'var(--accent)', approved: 'var(--ok)',
+    building: 'var(--warn)', done: 'var(--ok)', rejected: 'var(--bad)',
+  };
+  function boardCardHtml(c) {
+    const pill = `<span class="pill" style="color:${BOARD_STATUS_COLOR[c.status] || 'var(--dim)'};">${esc(c.status || '?').toUpperCase()}</span>`;
+    let actions = '';
+    if (c.status === 'gated') {
+      actions = `<button class="mic-btn" style="background:var(--ok); color:#04140c; padding:2px 10px; font-size:11px;" onclick="boardApprove('${esc(c.id)}', false)">APPROVE</button> ` +
+        `<button class="mic-btn" style="background:var(--bad); color:#140404; padding:2px 10px; font-size:11px;" onclick="boardApprove('${esc(c.id)}', true)">REJECT</button>`;
+    }
+    let gallery = '';
+    (c.gallery || []).forEach(g => {
+      gallery += ` <a href="${esc(g.url)}" target="_blank" style="color:var(--accent);">[${esc(g.label)}]</a>`;
+    });
+    const cls = c.classification
+      ? `<div class="dim" style="font-size:11px;">${esc(typeof c.classification === 'string' ? c.classification : JSON.stringify(c.classification))}</div>` : '';
+    return `<div style="border:1px solid var(--border); border-radius:8px; padding:8px 10px; background:var(--panel-2);">` +
+      `<div style="display:flex; gap:8px; align-items:center; justify-content:space-between;">` +
+      `<div style="min-width:0;"><span style="font-size:12px;">${pill} </span><span style="font-size:12px;">${esc(c.sentence || '')}</span></div>` +
+      `<div style="flex-shrink:0;">${actions}</div></div>${cls}${gallery}</div>`;
+  }
+  async function loadBoard() {
+    const list = document.getElementById('board-list');
+    const count = document.getElementById('board-count');
+    if (!list) return;
+    try {
+      const r = await fetch('/board?cb=' + Date.now(), { cache: 'no-store' });
+      const d = await r.json();
+      const cards = d.cards || [];
+      if (count) count.textContent = cards.length;
+      list.innerHTML = cards.map(boardCardHtml).join('') ||
+        '<div class="dim" style="font-size:12px;">the board is empty — capture the first idea above</div>';
+    } catch (e) { /* keep last */ }
+  }
+  async function sendBoardSentence() {
+    const f = document.getElementById('board-field');
+    if (!f || !f.value.trim()) return;
+    const sentence = f.value.trim();
+    f.value = '';
+    try {
+      await fetch('https://live.amartiecom.com/board', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sentence }),
+      });
+      loadBoard();
+    } catch (e) { /* next poll catches it */ }
+  }
+  async function boardApprove(id, reject) {
+    try {
+      await fetch('/board_approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, reject }),
+      });
+      loadBoard();
+    } catch (e) { /* next poll catches it */ }
+  }
+  function bindBoardUI() {
+    const send = document.getElementById('board-send');
+    const f = document.getElementById('board-field');
+    if (send && !send.dataset.bound) {
+      send.dataset.bound = 1;
+      send.addEventListener('click', sendBoardSentence);
+    }
+    if (f && !f.dataset.bound) {
+      f.dataset.bound = 1;
+      f.addEventListener('keydown', e => { if (e.key === 'Enter') sendBoardSentence(); });
+    }
+  }
+
+  // ---- Agent chat console: persistent Cockpit thread as chat bubbles ----
+  let _agentLastCount = -1;
+  function agentBubble(role, text) {
+    const you = role === 'user';
+    return `<div style="align-self:${you ? 'flex-end' : 'flex-start'}; max-width:80%; padding:6px 12px; border-radius:12px; ` +
+      (you ? 'background:var(--ok); color:#04140c; border-bottom-right-radius:2px;'
+           : 'background:var(--panel); border:1px solid var(--border); border-bottom-left-radius:2px; white-space:pre-wrap;') +
+      `">${esc(text)}</div>`;
+  }
+  async function loadAgentHistory() {
+    const chat = document.getElementById('agent-chat');
+    if (!chat) return;
+    try {
+      const r = await fetch('/history?cb=' + Date.now(), { cache: 'no-store' });
+      const d = await r.json();
+      if (d.count !== _agentLastCount) {
+        _agentLastCount = d.count;
+        chat.innerHTML = (d.turns || []).map(t => agentBubble(t.role, t.text)).join('') ||
+          '<div class="dim" style="align-self:center;">no history yet — the thread starts when you send a command</div>';
+        chat.scrollTop = chat.scrollHeight;
+      }
+    } catch (e) { /* keep last */ }
+  }
+
+  // node detail — a glass panel that opens when a master node is clicked
+  function openNodeKnow(profile, know) {
+    const card = document.querySelector('#node-grid').closest('.card');
+    let pop = card.querySelector('.node-pop');
+    if (!pop) {
+      pop = el('div', { class: 'node-pop' });
+      card.appendChild(pop);
+    }
+    pop.innerHTML = '';
+    pop.appendChild(el('span', { class: 'dt-close', text: '✕' }));
+    pop.appendChild(el('div', { class: 'dt-title', text: profile.name }));
+    pop.appendChild(el('div', { class: 'node-meta', text: know.what, style: 'margin:4px 0 8px;' }));
+    know.services.forEach(([name, val]) => {
+      pop.appendChild(el('div', { class: 'dt-file' }, [
+        el('span', { text: name }),
+        el('span', { class: 'dt-time', text: val }),
+      ]));
+    });
+    pop.appendChild(el('div', { class: 'mp-note', text: 'plug in your own services — click a service to configure it.' }));
+    pop.classList.add('show');
+    speak(`${profile.name}. ${know.what}`);
+  }
+  // close node popovers
+  document.addEventListener('click', e => {
+    if (e.target.closest('.node-pop .dt-close')) {
+      e.target.closest('.node-pop').classList.remove('show');
+      return;
+    }
+    document.querySelectorAll('.node-pop.show').forEach(p => {
+      if (!p.contains(e.target) && !e.target.closest('.node-card')) p.classList.remove('show');
+    });
+  });
+
+  /* ---------- standing posts (harness swarm from Mission Control) ---------- */
+  function renderPosts(data) {
+    const root = document.getElementById('post-grid');
+    root.innerHTML = '';
+    const swarm = data.swarm || [];
+    document.getElementById('post-count').textContent = `(${swarm.length})`;
+    if (!swarm.length) {
+      root.appendChild(el('div', { class: 'empty', text: 'Swarm offline — no runtimes yet.' }));
+      return;
+    }
+    swarm.forEach(a => {
+      const active = a.status === 'online' || a.status === 'active' || a.status === 'running';
+      root.appendChild(el('div', { class: `node-card ${active ? 'active' : ''}` }, [
+        el('div', { class: 'node-name' }, [
+          el('span', { class: `dot ${active ? 'ok' : 'bad'}` }),
+          document.createTextNode(a.name),
+        ]),
+        el('div', { class: 'node-meta' }, [
+          document.createTextNode(`${a.role || 'agent'}${a.soul ? ' · soul' : ''}${a.memory ? ' · mem' : ''}`),
+        ]),
+      ]));
+    });
+  }
+
+  /* ---------- cron ---------- */
+  function renderCron(data) {
+    const tbody = document.getElementById('cron-table');
+    tbody.innerHTML = '';
+    (data.cron || []).forEach(j => {
+      tbody.appendChild(el('tr', {}, [
+        el('td', {}, [el('code', { text: (j.id || '').slice(0, 10) })]),
+        el('td', { text: j.name || '-' }),
+        el('td', { text: j.schedule || '-' }),
+        el('td', { text: fmt12(j.next_run) }),
+        el('td', { text: fmt12(j.last_run) + (j.last_status ? ` (${j.last_status})` : '') }),
+        el('td', {}, [el('span', { class: `dot ${statusClass(j.status)}` }), ' ' + (j.status || '-')]),
+      ]));
+    });
+  }
+
+  function renderVaultCard(rootId, item, label) {
+    const root = document.getElementById(rootId);
+    root.innerHTML = '';
+    if (!item) { root.innerHTML = `<div class="empty">No ${label} file found.</div>`; return; }
+    root.appendChild(el('div', { class: 'node-meta', text: `${item.title} • ${fmt12(item.updated_at)}` }));
+    root.appendChild(el('div', { class: 'prewrap', text: item.preview || '(empty)' }));
+  }
+
+  /* ---------- MEMORY: cockpit window into the brain ---------- */
+  let lastVaultSig = '';
+  function renderBrain(data) {
+    const vault = data.vault;
+    if (!vault) return;
+    const sig = (vault.folders || []).length + '|' + (vault.recent || []).length + '|' + (vault.recent && vault.recent[0] ? vault.recent[0].name : '');
+    document.getElementById('vault-count').textContent = `(${vault.folder_count || 0} nodes)`;
+    document.getElementById('vault-hud-live').textContent = (vault.recent && vault.recent[0] ? `LAST WRITE ${fmt12(vault.recent[0].updated_at)}` : '—');
+    document.getElementById('dash-count').textContent = `${(vault.recent || []).length}+ notes`;
+    if (sig === lastVaultSig) return;  // redraw only when the brain changed
+    lastVaultSig = sig;
+    const box = document.getElementById('brain-nodes');
+    box.innerHTML = '';
+    const W = box.clientWidth || 700;
+    const H = box.clientHeight || 340;
+    const folders = (vault.folders || []).slice(0, 12);
+    const N = folders.length;
+    folders.forEach((f, i) => {
+      // spread nodes in a loose constellation (center-weighted)
+      const ang = (i / Math.max(N, 1)) * Math.PI * 2 + (i % 3) * 0.4;
+      const rad = 0.28 + ((i * 37) % 10) / 26;   // 0.28–0.66 of half-size
+      const x = W / 2 + Math.cos(ang) * rad * (W / 2 - 60);
+      const y = H / 2 + Math.sin(ang) * rad * (H / 2 - 70) + (i % 2 ? 14 : -10);
+      const hot = i < 3;  // most recently written folders glow gold
+      const node = el('div', { class: `mem-node${hot ? ' hot' : ''}`, style: `left:${x.toFixed(0)}px;top:${y.toFixed(0)}px;` }, [
+        el('div', { class: 'core' }),
+        el('div', { class: 'nlabel', text: f.name }),
+        el('div', { class: 'ncount', text: `${f.files} notes` }),
+      ]);
+      node.addEventListener('click', () => openNode(f, vault));
+      box.appendChild(node);
+    });
+  }
+  function openNode(folder, vault) {
+    const detail = document.getElementById('brain-detail');
+    const files = (folder.entries || []).slice(0, 12);
+    document.getElementById('dash-msg').textContent = `looking into ${folder.name} — ${files.length} notes`;
+    detail.innerHTML = '';
+    detail.appendChild(el('span', { class: 'dt-close', text: '✕' }));
+    detail.appendChild(el('div', { class: 'dt-title', text: `${folder.name}  (${folder.files} notes)` }));
+    if (!files.length) detail.appendChild(el('div', { class: 'empty', text: 'this node is empty — the brain writes here soon' }));
+    files.forEach(f => {
+      detail.appendChild(el('div', { class: 'dt-file' }, [
+        el('span', { text: f.name }),
+        el('span', { class: 'dt-time', text: fmt12(f.updated_at).split(',').pop().trim() }),
+      ]));
+    });
+    detail.classList.add('show');
+  }
+
+  /* ---------- plugins ---------- */
+  function renderPlugins(data) {
+    const root = document.getElementById('plugin-sections');
+    root.innerHTML = '';
+    const plugins = data.plugins || [];
+    if (!plugins.length) {
+      root.appendChild(el('section', { class: 'card' }, [el('div', { class: 'empty', text: 'no plugins yet — the swarm builds the first ones soon' })]));
+      return;
+    }
+    root.appendChild(el('section', { class: 'card grid-full' }, [
+      el('h2', { text: `Plugins — available (${plugins.length})` }),
+      el('div', { class: 'plugin-list' }, plugins.map(p => {
+        const body = el('div', { class: 'plugin-body' });
+        if (p.content && typeof p.content === 'object') {
+          body.appendChild(el('div', { class: 'prewrap', text: JSON.stringify(p.content, null, 2) }));
+        } else if (p.content) {
+          body.appendChild(el('div', { class: 'prewrap', text: p.content }));
+        } else {
+          body.appendChild(el('div', { class: 'empty', text: '(no content)' }));
+        }
+        if (p.updated_at) {
+          body.appendChild(el('div', { class: 'node-meta', text: `updated ${fmt12(p.updated_at)}`, style: 'margin-top:6px;' }));
+        }
+        const row = el('div', { class: 'plugin-row' }, [
+          el('span', { class: 'p-icon', text: p.icon || '🧩' }),
+          el('span', { class: 'p-name', text: p.title || p.name }),
+          el('span', { class: 'p-desc', text: p.description || '' }),
+          el('span', { class: 'p-caret', text: '▶' }),
+        ]);
+        row.addEventListener('click', () => {
+          const open = body.classList.toggle('show');
+          row.classList.toggle('open', open);
+          if (open && p.description) speak(p.description);
+        });
+        return el('div', {}, [row, body]);
+      })),
+    ]));
+  }
+
+  /* ---------- feed ---------- */
+  async function loadFeed() {
+    try {
+      const res = await fetch(`build_feed.txt?cb=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) { document.getElementById('feed-box').textContent = '(no build feed yet — first build writes here)'; return; }
+      const text = await res.text();
+      const box = document.getElementById('feed-box');
+      box.innerHTML = text.split('\n').map(ln => {
+        if (!ln.trim()) return '';
+        const m = ln.match(/^\[([0-9:. -]+)\]\s*(\S+)\s*(.*)$/);
+        if (!m) return esc(ln);
+        let cls = '';
+        const tag = m[2].toLowerCase();
+        if (['ok', 'done', 'built', 'verified'].includes(tag)) cls = 'ok';
+        else if (['warn', 'pending'].includes(tag)) cls = 'warn';
+        else if (['fail', 'error'].includes(tag)) cls = 'bad';
+        else if (['build', 'boot'].includes(tag)) cls = 'gold';
+        else cls = 'dim';
+        return `<span class="t">[${esc(m[1])}]</span> <span class="${cls}">${esc(m[2])}</span> ${esc(m[3])}`;
+      }).join('\n');
+      box.scrollTop = box.scrollHeight;
+    } catch (e) { /* keep last feed */ }
+  }
+
+  /* ---------- views ---------- */
+  function setView(view) {
+    activeView = view;
+    try { localStorage.setItem('cockpit-view', view); } catch (e) {}
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === view));
+    document.querySelectorAll('[data-view-panel]').forEach(p => {
+      p.style.display = p.dataset.viewPanel === view ? '' : 'none';
+    });
+    const ps = document.getElementById('plugin-sections');
+    ps.style.display = (view === 'plugins') ? 'grid' : 'none';
+  }
+
+  function render(data) {
+    document.getElementById('hdr-meta').textContent = `The Cockpit • ${data.hostname || 'unknown'} • generated ${fmt12(data.generated_at)}`;
+    const up = (data.plugins || []).length && (data.swarm || []).length;
+    document.getElementById('os-pill').textContent = up ? 'ONLINE' : 'BOOTING';
+    document.getElementById('os-pill').className = 'pill ' + (up ? 'live' : '');
+    renderLights(data);
+    renderNodes(data);
+    renderPosts(data);
+    renderCron(data);
+    renderVaultCard('hunt-card', data.hunt, 'hunt');
+    renderVaultCard('bridge-card', data.bridge, 'bridge');
+    renderPlugins(data);
+    renderBrain(data);
+    renderModelPicker(data);
+    renderFutureMasters(data);
+    renderTrading(data);
+    const ageSec = (Date.now() - new Date(data.generated_at).getTime()) / 1000;
+    document.getElementById('stale-banner').classList.toggle('visible', ageSec > 120);
+  }
+
+  async function load() {
+    try {
+      const res = await fetch(`system_data.json?cb=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(res.statusText);
+      const data = await res.json();
+      render(data);
+    } catch (e) { console.error('load failed', e); }
+  }
+
+  document.getElementById('nav').addEventListener('click', e => {
+    const item = e.target.closest('.nav-item');
+    if (item) setView(item.dataset.view);
+  });
+
+  // ---------- orchestrator model picker ----------
+  function renderModelPicker(data) {
+    const profiles = data.profiles || [];
+    const orch = profiles.find(p => p.name === 'orchestrator');
+    const badge = document.getElementById('orch-model');
+    const current = (orch && orch.model) ? orch.model.split('/').pop() : '—';
+    badge.textContent = current;
+    document.getElementById('mp-current').textContent = current;
+    const list = document.getElementById('mp-list');
+    list.innerHTML = '';
+    profiles.slice(0, 12).forEach(p => {
+      const model = (p.model || '-').split('/').pop();
+      const row = el('div', { class: `mp-row${p.name === 'orchestrator' ? ' current' : ''}` }, [
+        el('span', { class: 'mp-name', text: p.name }),
+        el('span', { class: 'mp-model', text: model }),
+      ]);
+      row.addEventListener('click', () => {
+        // direct to Hermes — the seat switch happens there
+        const was = document.getElementById('mp-current').textContent;
+        document.getElementById('mp-current').textContent = `${model} (via ${p.name})`;
+        speak(`Switching the orchestrator seat to ${model} — this opens in Hermes where you confirm the change.`);
+        setTimeout(() => { document.getElementById('mp-current').textContent = was; }, 4000);
+      });
+      list.appendChild(row);
+    });
+  }
+  document.getElementById('orch-model').addEventListener('click', () => {
+    const picker = document.getElementById('model-picker');
+    picker.classList.toggle('show');
+    if (picker.classList.contains('show')) {
+      speak('This is the orchestrator seat. Pick the model you want driving the command post — the switch happens in Hermes.');
+    }
+  });
+
+  // Deep Research — the swarm (mixture of experts) goes out to hunt
+  document.getElementById('research-btn').addEventListener('click', () => {
+    setView('research');
+    document.querySelectorAll('.face-chip').forEach(c => c.classList.toggle('active', c.dataset.face === 'deck'));
+    speak('Deep research — the swarm, a mixture of expert agents, goes out to hunt, verify and bring back knowledge. Here is the latest hunt and the daily brief.');
+  });
+
+  // Orchestrator input — every question is kept (the memory dump)
+  document.getElementById('convo-field').addEventListener('keydown', async e => {
+    if (e.key !== 'Enter') return;
+    const field = e.target;
+    const text = field.value.trim();
+    if (!text) return;
+    field.value = '';
+    const box = document.getElementById('convo-box');
+    box.appendChild(el('div', { class: 'convo-msg you' }, [
+      el('b', { text: 'you' }), document.createTextNode('  ' + text),
+    ]));
+    box.scrollTop = box.scrollHeight;
+    const saved = el('div', { class: 'convo-msg hermes' }, [
+      el('b', { text: 'orchestrator' }), document.createTextNode('  noted — kept in the memory dump. The seat never forgets where it left off.'),
+    ]);
+    box.appendChild(saved);
+    box.scrollTop = box.scrollHeight;
+    try {
+      await fetch('/dump', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+    } catch (err) { /* offline — the dump catches up later */ }
+  });
+
+  // ---------- mic — speech-to-text straight into the orchestrator seat ----------
+  const micBtn = document.getElementById('mic-btn');
+  const convoField = document.getElementById('convo-field');
+  let listening = false;
+  let sttTimer = null;
+  let lastSttLine = '';
+  function pollStt() {
+    fetch(`/stt_feed?cb=${Date.now()}`, { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => {
+        const lines = d.lines || [];
+        if (!lines.length) return;
+        const last = lines[lines.length - 1];
+        if (last !== lastSttLine) {
+          lastSttLine = last;
+          // strip the "[N]" batch prefix → pure words
+          const text = last.replace(/^\[\d+\]\s*/, '').trim();
+          if (text) convoField.value = text;
+        }
+      })
+      .catch(() => {});
+  }
+  micBtn.addEventListener('click', () => {
+    listening = !listening;
+    micBtn.classList.toggle('listening', listening);
+    if (listening) {
+      convoField.value = '';
+      convoField.placeholder = 'listening… speak now';
+      lastSttLine = '';
+      pollStt();
+      sttTimer = setInterval(pollStt, 1500);
+    } else {
+      clearInterval(sttTimer);
+      sttTimer = null;
+      convoField.placeholder = 'type your question here — or tap the mic and speak…';
+      // auto-send what was caught
+      if (convoField.value.trim()) {
+        convoField.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      }
+    }
+  });
+
+  // Build feed collapse — scoot it to a corner tab
+  document.getElementById('feed-toggle').addEventListener('click', e => {
+    if (e.target.closest('.info-btn')) return;
+    const box = document.getElementById('feed-box');
+    const caret = document.getElementById('feed-caret');
+    const collapsed = box.classList.toggle('collapsed');
+    caret.textContent = collapsed ? '▸' : '▾';
+  });
+
+  // ---------- self-explanatory layer: help popovers + Liam audio ----------
+  // Voice = your ElevenLabs (Liam) clips, pre-built server-side into tts/.
+  // Users plug in their own voice by dropping their own clips in there.
+  const TTS_MANIFEST = (async () => {
+    try {
+      const res = await fetch('tts/manifest.json?cb=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) return {};
+      return await res.json();
+    } catch (e) { return {}; }
+  })();
+  let soundOn = true;
+  let currentAudio = null;
+  // ---------- voice narration — the cockpit speaks its storyline ----------
+  // pre-built Liam clips where they exist; SpeechSynthesis everywhere else,
+  // with the owner's choice of voice: female → male → off (persisted).
+  let voicePref = 'female';
+  try { voicePref = localStorage.getItem('cockpit-voice') || 'female'; } catch (e) {}
+  function _voiceBtnLabel() {
+    const b = document.getElementById('voice-btn');
+    if (!b) return;
+    b.textContent = voicePref === 'off' ? '🔇 voice: off' : `🔊 voice: ${voicePref}`;
+  }
+  _voiceBtnLabel();
+  document.getElementById('voice-btn').addEventListener('click', () => {
+    voicePref = voicePref === 'female' ? 'male' : voicePref === 'male' ? 'off' : 'female';
+    try { localStorage.setItem('cockpit-voice', voicePref); } catch (e) {}
+    _voiceBtnLabel();
+    if (voicePref !== 'off') narrate(`Voice set to ${voicePref}. I will narrate the cockpit for you.`);
+  });
+  function _pickVoice() {
+    const voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+    if (!voices.length) return null;
+    const en = voices.filter(v => /^en/i.test(v.lang));
+    const pool = en.length ? en : voices;
+    const femaleRe = /female|samantha|zira|susan|victoria|karen|moira|tessa|fiona|serena|allison|ava|zoe/i;
+    const maleRe = /male|david|daniel|alex|fred|thomas|oliver|james|george|aaron|arthur|liam/i;
+    const re = voicePref === 'male' ? maleRe : femaleRe;
+    const anti = voicePref === 'male' ? femaleRe : maleRe;
+    return pool.find(v => re.test(v.name) && !anti.test(v.name))
+        || pool.find(v => re.test(v.name))
+        || pool[0];
+  }
+  function narrate(txt) {
+    if (voicePref === 'off' || !txt || !window.speechSynthesis) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(txt);
+      const v = _pickVoice();
+      if (v) u.voice = v;
+      u.rate = 1.02;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  async function speak(txt) {
+    if (!soundOn || !txt) return;
+    const manifest = await TTS_MANIFEST;
+    const clip = manifest[txt];
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    if (clip) {
+      currentAudio = new Audio('tts/' + clip);
+      currentAudio.play().catch(() => {});
+      return;
+    }
+    narrate(txt); // no pre-built clip — the storyline still speaks, in the chosen voice
+  }
+  function openHelp(btn) {
+    const card = btn.closest('.card');
+    if (!card) return;
+    let pop = card.querySelector('.popover');
+    if (pop) {
+      pop.classList.toggle('show');
+      if (pop.classList.contains('show')) speak(pop.dataset.help);
+      return;
+    }
+    pop = document.createElement('div');
+    pop.className = 'popover';
+    pop.dataset.help = btn.dataset.help || '';
+    pop.innerHTML = `${esc(btn.dataset.help || '')} <button class="speak">🔊 say it</button>`;
+    pop.querySelector('.speak').addEventListener('click', () => speak(pop.dataset.help));
+    card.appendChild(pop);
+    pop.classList.add('show');
+    speak(pop.dataset.help);
+  }
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.info-btn');
+    if (btn) { e.stopPropagation(); openHelp(btn); return; }
+    // close popovers when clicking elsewhere
+    document.querySelectorAll('.popover.show').forEach(p => { if (!p.contains(e.target)) p.classList.remove('show'); });
+  });
+
+  // ---------- guided tour ----------
+  const TOUR_STEPS = [
+    ['System', 'These are the health lights. Green means that part of the machine is up and talking. Red means it is not talking. This is where you check that everything is alive.'],
+    ['Master Nodes', 'These are the brains — the agent profiles that run the show. The orchestrator is the one you are talking to right now. RUN means that brain is awake.'],
+    ['Standing Posts', 'This is your standing team. Each post is a specialist with a job: the curator keeps memory organized, the researcher hunts, the architect designs, the builder builds, the verifier checks, the integrator installs.'],
+    ['Build Feed', 'This is the work log. Every build and check lands here as it happens — the proof the machine is alive while you work.'],
+    ['Conversation', 'This is where you talk to the machine. Your side on the left, the answers on the right, like a terminal. Type, send, read the reply — and the feed shows the work while it thinks.'],
+  ];
+  let tourIdx = -1;
+  function stopTour() {
+    tourIdx = -1;
+    document.querySelectorAll('.tour-highlight').forEach(c => c.classList.remove('tour-highlight'));
+    document.querySelectorAll('.popover.show').forEach(p => p.classList.remove('show'));
+  }
+  function stepTour() {
+    if (tourIdx >= TOUR_STEPS.length) { stopTour(); speak('That is the whole tour. You are ready to fly.'); return; }
+    const [title, text] = TOUR_STEPS[tourIdx];
+    document.querySelectorAll('.tour-highlight').forEach(c => c.classList.remove('tour-highlight'));
+    document.querySelectorAll('.popover.show').forEach(p => p.classList.remove('show'));
+    const h2 = [...document.querySelectorAll('.card h2')].find(h => h.textContent.trim().startsWith(title));
+    if (!h2) { tourIdx++; stepTour(); return; }
+    const card = h2.closest('.card');
+    card.classList.add('tour-highlight');
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    let pop = card.querySelector('.popover');
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.className = 'popover';
+      card.appendChild(pop);
+    }
+    pop.dataset.help = text;
+    pop.innerHTML = `${esc(text)} <button class="speak">🔊 say it</button>`;
+    pop.querySelector('.speak').addEventListener('click', () => speak(text));
+    pop.classList.add('show');
+    speak(text);
+  }
+  document.getElementById('tour-btn').addEventListener('click', () => {
+    const going = tourIdx >= 0;
+    stopTour();
+    if (!going) { tourIdx = 0; stepTour(); document.getElementById('tour-btn').textContent = '■ Stop tour'; }
+    else document.getElementById('tour-btn').textContent = '▶ Guide me';
+  });
+  document.addEventListener('keydown', e => {
+    if (tourIdx < 0) return;
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); tourIdx++; stepTour(); }
+    if (e.key === 'Escape') { stopTour(); document.getElementById('tour-btn').textContent = '▶ Guide me'; }
+  });
+  document.getElementById('welcome-x').addEventListener('click', () => {
+    document.getElementById('welcome').style.display = 'none';
+  });
+  // restart tour from the welcome
+  document.getElementById('welcome').addEventListener('click', e => {
+    if (e.target.closest('#tour-btn')) return;
+  });
+
+  // ---------- FACES — plugin layers that overlap like pages ----------
+  const FACES = {
+    art: {
+      title: '🎨 Art Studio',
+      sub: 'The art master — the whole cockpit becomes a canvas. Generate, edit, iterate.',
+      convo: [
+        ['you', 'I want a cyberpunk cityscape poster for my room.'],
+        ['agent', 'On it. I have the art master loaded — generating three concepts now, watch the canvas.'],
+      ],
+      tools: [['Canvas', 'live generation area'], ['Style bank', 'cyberpunk · neon · minimal'], ['Iterate', 'refine any piece with words']],
+    },    music: {
+      title: '🎵 Music Studio',
+      sub: 'The music master — synthesize tracks, compose, produce, from idea to file.',
+      convo: [
+        ['you', 'Make me a lo-fi beat, 85 BPM, rainy window vibe.'],
+        ['agent', 'Composing. Chords down, drums next — hear it as it builds.'],
+      ],
+      tools: [['Composer', 'chords · melody · drums'], ['Synthesizer', 'pick your sound engine'], ['Mixer', 'levels · effects · master']],
+    },
+    video: {
+      title: '🎬 Video Suite',
+      sub: 'The video master — clips, edits, animation, from script to render.',
+      convo: [
+        ['you', 'Turn this idea into a 30-second promo.'],
+        ['agent', 'Scripting it now — then storyboard, then render. Watch the timeline.'],
+      ],
+      tools: [['Script', 'from idea to words'], ['Timeline', 'cut · splice · transitions'], ['Render', 'export the finished cut']],
+    },
+    creator: {
+      title: '📱 TikTok Creator',
+      sub: 'The content master — the rules of the platform, the hooks, the whole game.',
+      convo: [
+        ['you', 'What do I post today to grow my channel?'],
+        ['agent', 'Here is your playbook — hook in the first second, this niche is hot today, and here are three video ideas with scripts ready.'],
+      ],
+      tools: [['Playbook', 'the rules of this platform'], ['Ideas', 'daily post suggestions'], ['Scripts', 'ready-to-film hooks'], ['Metrics', 'what worked, what flopped']],
+    },
+    voice: {
+      title: '🎙️ Voice Room',
+      sub: 'The voice master — your voice, or a service like ElevenLabs. The machine speaks in it.',
+      convo: [
+        ['you', 'Use my voice from now on.'],
+        ['agent', 'Done — every answer from this point speaks in your voice.'],
+      ],
+      tools: [['Your voice', 'record or upload'], ['ElevenLabs', 'plug in a studio voice'], ['Pitch', 'tone · speed · style']],
+    },
+    memory: {
+      title: '🧠 Memory Master',
+      sub: 'The brain that remembers everything and connects ideas across every node.',
+      convo: [
+        ['you', 'What do I know about building a YouTube channel?'],
+        ['agent', 'Three nodes hold pieces of that — pulling them together now.'],
+      ],
+      tools: [['Vault', 'the Obsidian brain'], ['Connections', 'ideas linked across nodes'], ['Recall', 'ask anything, get everything']],
+    },
+  };
+  function openFace(name) {
+    if (name === 'deck') { closeAllFaces(); return; }
+    const f = FACES[name];
+    if (!f) return;
+    // a face can only be open once — bring it to the top if already there
+    const existing = document.getElementById('face-' + name);
+    if (existing) { existing.remove(); }
+    const layer = el('div', { class: 'face-layer', id: 'face-' + name }, [
+      el('div', { class: 'fl-head' }, [
+        el('div', {}, [
+          el('div', { class: 'fl-title', text: f.title }),
+          el('div', { class: 'fl-sub', text: f.sub }),
+        ]),
+        el('div', { class: 'fl-close', text: '✕ close' }),
+      ]),
+      name === 'art' ? buildArtStudio(f) : el('div', { class: 'fl-body' }, [
+        el('div', { class: 'fl-convo' }, f.convo.map(([who, txt]) =>
+          el('div', {}, [el('span', { class: 'c-' + who, text: who + ' › ' }), document.createTextNode(txt)])
+        )),
+        el('div', { class: 'fl-tools' }, f.tools.map(([t, d]) =>
+          el('div', { class: 'fl-tool' }, [el('b', { text: t + ' — ' }), document.createTextNode(d)])
+        )),
+      ]),
+    ]);
+    layer.querySelector('.fl-close').addEventListener('click', () => layer.remove());
+    document.getElementById('face-stack').appendChild(layer);
+    document.querySelectorAll('.face-chip').forEach(c => c.classList.toggle('active', c.dataset.face === name));
+    speak(`${f.title}. ${f.sub}`);
+  }
+
+  // ---------- ART STUDIO — the real face: prompt → engine → canvas ----------
+  function buildArtStudio(f) {
+    const body = el('div', { class: 'art-studio' });
+    const inputRow = el('div', { class: 'art-inputrow' });
+    const field = el('textarea', { class: 'convo-field art-field', rows: 2, placeholder: 'paste or type your description here — then hit Generate' });
+    const goBtn = el('button', { class: 'art-go', text: '⚡ Generate' });
+    const canvas = el('div', { class: 'art-canvas' }, [
+      el('div', { class: 'art-empty', text: 'describe something and hit Generate — the art master draws it here' }),
+    ]);
+    const status = el('div', { class: 'art-status', text: 'engine: local (drop gemini_key.txt into ~/.halo_secrets to unlock Nano Banana)' });
+    inputRow.appendChild(field);
+    inputRow.appendChild(goBtn);
+    body.appendChild(inputRow);
+    body.appendChild(canvas);
+    body.appendChild(status);
+    async function generate() {
+      const prompt = field.value.trim();
+      if (!prompt) { status.textContent = 'nothing to draw — paste your description in the box first'; field.focus(); return; }
+      goBtn.disabled = true;
+      goBtn.textContent = '… drawing';
+      status.textContent = 'the art master is working…';
+      canvas.innerHTML = '';
+      try {
+        const res = await fetch('/art', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
+        });
+        const d = await res.json();
+        if (d.ok) {
+          canvas.appendChild(el('img', { src: d.url + '?cb=' + Date.now(), class: 'art-img' }));
+          // also repaint the room backdrop with the new artwork
+          const bg = document.querySelector('.theme-bg');
+          if (bg) { bg.style.backgroundImage = `url(${d.url}?cb=${Date.now()})`; bg.classList.add('show'); }
+          status.textContent = d.warn ? `drew with ${d.engine} — ${d.warn}` : `drew with ${d.engine}`;
+          canvas.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+          canvas.appendChild(el('div', { class: 'art-empty', text: 'the art master stumbled: ' + (d.error || 'unknown') }));
+          status.textContent = 'failed — try again';
+        }
+      } catch (err) {
+        canvas.appendChild(el('div', { class: 'art-empty', text: 'could not reach the art engine' }));
+        status.textContent = 'offline';
+      }
+      goBtn.disabled = false;
+      goBtn.textContent = '⚡ Generate';
+    }
+    goBtn.addEventListener('click', generate);
+    field.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generate(); } });
+    return body;
+  }
+  function closeAllFaces() {
+    document.getElementById('face-stack').innerHTML = '';
+    document.querySelectorAll('.face-chip').forEach(c => c.classList.toggle('active', c.dataset.face === 'deck'));
+  }
+  document.getElementById('faces-bar').addEventListener('click', e => {
+    const chip = e.target.closest('.face-chip');
+    if (chip) openFace(chip.dataset.face);
+  });
+
+  // ---------- THEMES — each theme DRAWS its own artwork backdrop ----------
+  const THEMES = {
+    default: { label: 'Default', prompt: '' },
+    cyberpunk: { label: 'Cyberpunk', prompt: 'cyberpunk city street at night, neon signs, rain, hover cars, cinematic wide shot, dark moody, highly detailed' },
+    paisley: { label: 'Paisley', prompt: 'paisley pattern, ornate swirling fabric design, rich jewel colors, gold and silver threads on deep background, luxury textile, symmetrical mandala' },
+    metallic: { label: 'Metallic', prompt: 'brushed metal and polished steel plates, chrome reflections, gold rivets, industrial sci-fi surface, blue steel tones' },
+    graffiti: { label: 'Graffiti', prompt: 'urban graffiti wall art, vibrant spray paint, tags and wildstyle letters, brick wall, street art, colorful and raw' },
+    rusty: { label: 'Rusty', prompt: 'rusted corrugated metal surface, weathered patina, orange brown rust textures, old industrial wall, moody' },
+  };
+  const savedTheme = localStorage.getItem('cockpit-theme') || 'default';
+  const themeBg = el('div', { class: 'theme-bg' });
+  document.body.appendChild(themeBg);
+  function applyTheme(name, quiet = false) {
+    const t = THEMES[name] || THEMES.default;
+    document.body.classList.remove('theme-cyberpunk', 'theme-paisley', 'theme-metallic', 'theme-graffiti', 'theme-rusty');
+    if (name !== 'default') document.body.classList.add('theme-' + name);
+    localStorage.setItem('cockpit-theme', name);
+    document.querySelectorAll('.theme-chip').forEach(c => c.classList.toggle('active', c.dataset.theme === name));
+    // draw the backdrop artwork (only when a themed look is picked)
+    if (t.prompt && !quiet) {
+      themeBg.classList.add('loading');
+      fetch('/art', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: t.prompt, width: 1600, height: 900 }),
+      }).then(r => r.json()).then(d => {
+        themeBg.classList.remove('loading');
+        if (d.ok) {
+          themeBg.style.backgroundImage = `url(${d.url}?cb=${Date.now()})`;
+          themeBg.classList.add('show');
+        }
+      }).catch(() => themeBg.classList.remove('loading'));
+    } else {
+      themeBg.classList.remove('show');
+      themeBg.style.backgroundImage = '';
+    }
+  }
+  applyTheme(savedTheme, true);
+
+  // ---------- SCENE FLIP — describe the room, the cockpit becomes it ----------
+  // One click, one sentence: "a beach" → the backdrop IS the beach. The interface
+  // is conversational and self-transforming, not a settings menu.
+  function applySceneBackdrop(url) {
+    themeBg.style.backgroundImage = `url(${url})`;
+    themeBg.classList.add('show');
+  }
+  function flipScene() {
+    const field = document.getElementById('scene-field');
+    const prompt = (field.value || '').trim();
+    if (!prompt) { field.focus(); return; }
+    const go = document.getElementById('scene-go');
+    go.disabled = true; go.textContent = '…';
+    narrate(`Flipping the room — ${prompt}. Give me a moment to draw it.`);
+    themeBg.classList.add('loading');
+    fetch('/art', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt + ', immersive environment backdrop, wide shot, highly detailed', width: 1600, height: 900 }),
+    }).then(r => r.json()).then(d => {
+      themeBg.classList.remove('loading');
+      go.disabled = false; go.textContent = 'FLIP';
+      if (d.ok) {
+        const url = `${d.url}?cb=${Date.now()}`;
+        applySceneBackdrop(url);
+        try { localStorage.setItem('cockpit-scene', JSON.stringify({ prompt, url })); } catch (e) {}
+        narrate(`Done. Welcome to ${prompt}. Don't like it — describe something else and I will flip it again.`);
+        field.value = '';
+        document.getElementById('scene-bar').classList.remove('show');
+      } else {
+        narrate('The scene engine stumbled — try describing it again.');
+      }
+    }).catch(() => {
+      themeBg.classList.remove('loading');
+      go.disabled = false; go.textContent = 'FLIP';
+      narrate('The scene engine is offline right now.');
+    });
+  }
+  document.getElementById('scene-flip-chip').addEventListener('click', () => {
+    const bar = document.getElementById('scene-bar');
+    const opening = !bar.classList.contains('show');
+    bar.classList.toggle('show');
+    if (opening) {
+      document.getElementById('scene-field').focus();
+      narrate('Describe the room you want — a beach, a jungle, anything — and the cockpit becomes it. Instantly.');
+    }
+  });
+  document.getElementById('scene-go').addEventListener('click', flipScene);
+  document.getElementById('scene-field').addEventListener('keydown', e => { if (e.key === 'Enter') flipScene(); });
+  // restore the owner's last described scene across reloads
+  try {
+    const saved = JSON.parse(localStorage.getItem('cockpit-scene') || 'null');
+    if (saved && saved.url) applySceneBackdrop(saved.url);
+  } catch (e) {}
+  document.getElementById('faces-bar').addEventListener('click', e => {
+    const chip = e.target.closest('.theme-chip');
+    if (chip) {
+      applyTheme(chip.dataset.theme);
+      const t = THEMES[chip.dataset.theme];
+      speak(`${t.label} theme — drawing ${t.label} artwork for the room.`);
+    }
+  });
+  // brain detail close
+  document.getElementById('brain-detail').addEventListener('click', e => {
+    if (e.target.closest('.dt-close')) {
+      document.getElementById('brain-detail').classList.remove('show');
+      document.getElementById('dash-msg').textContent = 'sitting in the chair — looking into the abyss of memory';
+    }
+  });
+  // re-place constellation when the window resizes
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { lastVaultSig = ''; load(); }, 250);
+  });
+
+  function tick() {
+    nextRefresh -= 1;
+    if (nextRefresh <= 0) { nextRefresh = POLL_MS / 1000; load(); }
+    document.getElementById('refresh-txt').textContent = `refresh in ${nextRefresh}s`;
+  }
+
+  load();
+  loadFeed();
+  loadSkills();
+  bindAgentUI();
+  bindBoardUI();
+  loadBoard();
+  setInterval(loadBoard, 5000);
+  setInterval(pollAgent, 2000);
+  setInterval(loadAgentHistory, 5000);
+  loadAgentHistory();
+  let _startView = 'dashboard';
+  try { _startView = localStorage.getItem('cockpit-view') || 'dashboard'; } catch (e) {}
+  setView(_startView);
+  try { if (localStorage.getItem('cockpit-capwin') === '1') document.getElementById('cap-overlay').classList.add('show'); } catch (e) {}
+  nextRefresh = POLL_MS / 1000;
+  timer = setInterval(tick, 1000);
+  setInterval(loadFeed, FEED_POLL_MS);
+</script>
+<script src="cockpit_art.js"></script>
+</body>
+</html>
